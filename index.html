@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aircraft Status Dashboard</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes blink { 0%, 50%, 100% { opacity: 1; } 25%, 75% { opacity: 0; } }
+        .blink { animation: blink 1.2s ease-in-out infinite; }
+        
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(-5%); }
+            50% { transform: translateY(0); }
+        }
+        .animate-bounce { animation: bounce-slow 2s infinite; }
+
+        .insp-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 10px;
+            background-color: #ef4444;
+            color: white;
+            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function Dashboard() {
+            const [aircraft, setAircraft] = useState([]);
+            const [currentTime, setCurrentTime] = useState(new Date());
+            const [syncing, setSyncing] = useState(false);
+            const [nextSync, setNextSync] = useState(300);
+            const [loading, setLoading] = useState(true);
+
+            const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=0&single=true&output=csv';
+
+            async function syncFromGoogleSheet() {
+                setSyncing(true);
+                try {
+                    let response = await fetch(SHEET_URL);
+                    if (!response.ok) {
+                        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                        response = await fetch(proxyUrl + encodeURIComponent(SHEET_URL));
+                    }
+                    const csvText = await response.text();
+                    const lines = csvText.trim().split('\n');
+                    const parsedData = lines.slice(1).map(line => {
+                        const cols = line.split(',').map(col => col.trim().replace(/"/g, ''));
+                        return {
+                            slNo: parseInt(cols[0]),
+                            registration: cols[1],
+                            type: cols[2],
+                            status: cols[3],
+                            dailyInsp: cols[4],
+                            weeklyInsp: cols[5],
+                            mel: cols[6] || '',
+                            remarks: cols[7] || ''
+                        };
+                    }).filter(row => row.registration && !isNaN(row.slNo));
+
+                    if (parsedData.length > 0) {
+                        setAircraft(parsedData);
+                        setNextSync(300);
+                    }
+                } catch (error) {
+                    console.error('Sync error:', error);
+                } finally {
+                    setSyncing(false);
+                    setLoading(false);
+                }
+            }
+
+            useEffect(() => {
+                syncFromGoogleSheet();
+                const timeTimer = setInterval(() => setCurrentTime(new Date()), 1000);
+                const countdownTimer = setInterval(() => {
+                    setNextSync(prev => {
+                        if (prev <= 1) {
+                            syncFromGoogleSheet();
+                            return 300;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+                return () => { clearInterval(timeTimer); clearInterval(countdownTimer); };
+            }, []);
+
+            function calculateTime(dateStr) {
+                if (!dateStr || dateStr.trim() === "") return { hours: 999, overdue: false };
+                try {
+                    const parts = dateStr.split(' ');
+                    const datePart = parts[0].split('/');
+                    const timePart = parts[1].split(':');
+                    const due = new Date(Date.UTC(datePart[2], datePart[1] - 1, datePart[0], timePart[0], timePart[1]));
+                    const diffMs = due - new Date();
+                    const hours_remaining = Math.floor(diffMs / 3600000);
+                    return { hours: hours_remaining, overdue: hours_remaining < 0 };
+                } catch (e) {
+                    return { hours: 999, overdue: false };
+                }
+            }
+
+            function getStatusColor(status) {
+                const s = status?.toUpperCase();
+                if (s === 'SERVICEABLE') return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+                if (s === 'MRO') return 'bg-amber-100 text-amber-700 border border-amber-200';
+                if (s === 'AOG') return 'bg-rose-100 text-rose-700 border border-rose-200';
+                return 'bg-slate-100 text-slate-600 border border-slate-200';
+            }
+
+            if (loading) return <div className="p-20 text-center font-bold text-slate-400 animate-pulse uppercase tracking-widest">Initialising Fleet Systems...</div>;
+
+            return (
+                <div className="min-h-screen p-6 font-sans">
+                    <div className="max-w-7xl mx-auto">
+                        
+                        {/* HEADER SECTION */}
+                        <div className="bg-white rounded-2xl shadow-sm p-8 mb-6 border border-slate-200 flex flex-col md:flex-row justify-between items-center">
+                            <div className="text-center md:text-left">
+                                <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Aircraft Status Dashboard</h1>
+                                <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Real-time Maintenance Monitoring</p>
+                            </div>
+                            <div className="mt-4 md:mt-0 bg-slate-900 text-white px-8 py-3 rounded-xl shadow-lg text-center">
+                                <div className="font-mono text-3xl font-bold">
+                                    {currentTime.getUTCHours().toString().padStart(2, '0')}:
+                                    {currentTime.getUTCMinutes().toString().padStart(2, '0')}:
+                                    {currentTime.getUTCSeconds().toString().padStart(2, '0')}
+                                </div>
+                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">UTC TIME SYSTEM</div>
+                            </div>
+                        </div>
+
+                        {/* MAIN DATA TABLE */}
+                        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-10">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em]">
+                                        <th className="px-6 py-5">No</th>
+                                        <th className="px-6 py-5">Registration</th>
+                                        <th className="px-6 py-5 text-center">Status</th>
+                                        <th className="px-6 py-5">Daily Insp</th>
+                                        <th className="px-6 py-5">Weekly Insp</th>
+                                        <th className="px-6 py-5">MEL</th>
+                                        <th className="px-6 py-5">Alerts / Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {aircraft.map((ac, i) => {
+                                        const dailyTime = calculateTime(ac.dailyInsp);
+                                        const weeklyTime = calculateTime(ac.weeklyInsp);
+                                        const showAlerts = ac.status?.toUpperCase() !== 'AOG' && ac.status?.toUpperCase() !== 'MRO';
+                                        const isCritical = showAlerts && (dailyTime.hours <= 3 || weeklyTime.hours <= 3);
+                                        
+                                        return (
+                                            <tr key={i} className="hover:bg-slate-50 transition-colors">
+                                                <td className="px-6 py-4 text-xs font-bold text-slate-300">{ac.slNo}</td>
+                                                <td className="px-6 py-4 text-sm font-black text-blue-700">{ac.registration}</td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className={'px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ' + getStatusColor(ac.status)}>
+                                                        {ac.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-xs font-mono text-slate-600">{ac.dailyInsp}</td>
+                                                <td className="px-6 py-4 text-xs font-mono text-slate-600">{ac.weeklyInsp}</td>
+                                                <td className="px-6 py-4 text-sm font-medium">
+                                                    {ac.status === 'MRO' ? (
+                                                        <span className="text-slate-300">-</span>
+                                                    ) : ac.mel && ac.mel.trim() ? (
+                                                        <span className="text-slate-700">{ac.mel}</span>
+                                                    ) : (
+                                                        <span className="text-emerald-600 font-bold">NIL</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {isCritical ? (
+                                                        <span className="insp-badge blink">⚠️ COMPLETE INSP</span>
+                                                    ) : (
+                                                        <span className="text-slate-500 text-sm font-medium italic">{ac.remarks || 'Normal'}</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* STATUS GUIDE WITH HOVER TOOLTIPS */}
+                        <div className="bg-white rounded-2xl shadow-lg p-8 border border-slate-200 mb-20">
+                            <h3 className="font-extrabold text-slate-900 mb-6 uppercase tracking-widest text-xs border-l-4 border-blue-600 pl-4">
+                                Status Guide (Hover to see aircraft)
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="group relative bg-slate-50 p-4 rounded-xl border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50 transition-all cursor-default">
+                                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-700 uppercase">SERVICEABLE</span>
+                                    <p className="mt-2 text-xs text-slate-500 font-medium italic">Ready for operation</p>
+                                    <div className="hidden group-hover:block absolute -top-12 left-0 bg-emerald-600 text-white text-[10px] font-bold px-3 py-2 rounded shadow-xl animate-bounce whitespace-nowrap z-10">
+                                        FLEET: {aircraft.filter(a => a.status?.toUpperCase() === 'SERVICEABLE').map(a => a.registration).join(', ') || 'None'}
+                                    </div>
+                                </div>
+                                
+                                <div className="group relative bg-slate-50 p-4 rounded-xl border border-slate-100 hover:border-amber-200 hover:bg-amber-50 transition-all cursor-default">
+                                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-amber-100 text-amber-700 uppercase">MRO</span>
+                                    <p className="mt-2 text-xs text-slate-500 font-medium italic">Maintenance Activity</p>
+                                    <div className="hidden group-hover:block absolute -top-12 left-0 bg-amber-600 text-white text-[10px] font-bold px-3 py-2 rounded shadow-xl animate-bounce whitespace-nowrap z-10">
+                                        FLEET: {aircraft.filter(a => a.status?.toUpperCase() === 'MRO').map(a => a.registration).join(', ') || 'None'}
+                                    </div>
+                                </div>
+
+                                <div className="group relative bg-slate-50 p-4 rounded-xl border border-slate-100 hover:border-rose-200 hover:bg-rose-50 transition-all cursor-default">
+                                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-rose-100 text-rose-700 uppercase">AOG</span>
+                                    <p className="mt-2 text-xs text-slate-500 font-medium italic">Aircraft on Ground (Grounded)</p>
+                                    <div className="hidden group-hover:block absolute -top-12 left-0 bg-rose-600 text-white text-[10px] font-bold px-3 py-2 rounded shadow-xl animate-bounce whitespace-nowrap z-10">
+                                        FLEET: {aircraft.filter(a => a.status?.toUpperCase() === 'AOG').map(a => a.registration).join(', ') || 'None'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SYNC CONTROLS */}
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-slate-900 rounded-2xl text-white">
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    Next Auto-Sync: <span className="text-white font-mono">{Math.floor(nextSync / 60)}:{String(nextSync % 60).padStart(2, '0')}</span>
+                                </span>
+                            </div>
+                            <button
+                                onClick={syncFromGoogleSheet}
+                                disabled={syncing}
+                                className="w-full md:w-auto px-10 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+                            >
+                                {syncing ? 'UPDATING...' : 'Force Data Sync'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+    </script>
+</body>
+</html>
