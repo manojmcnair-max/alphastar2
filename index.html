@@ -3,66 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aircraft Status Dashboard</title>
+    <title>Fleet Command | Aircraft Status</title>
+    
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
+        body { font-family: 'Inter', sans-serif; }
+        
         @keyframes blink { 
             0%, 50%, 100% { opacity: 1; } 
-            25%, 75% { opacity: 0; } 
+            25%, 75% { opacity: 0.5; } 
         }
-        .blink { animation: blink 1.2s ease-in-out infinite; }
+        .blink { animation: blink 1.5s ease-in-out infinite; }
         
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-6px); }
         }
-        .float { animation: float 3s ease-in-out infinite; }
+        .float { animation: float 4s ease-in-out infinite; }
 
-        .insp-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-weight: 800;
-            font-size: 10px;
-            background-color: #ef4444;
-            color: white;
-            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
-            letter-spacing: 0.05em;
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
             background-attachment: fixed;
+            color: #334155;
         }
 
+        /* Refined Glass Effect */
         .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
         .card-hover {
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -5px rgba(0,0,0,0.1);
         }
 
-        .progress-ring {
-            transition: stroke-dashoffset 0.5s ease;
-        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="gradient-bg min-h-screen">
+<body class="gradient-bg min-h-screen text-slate-800">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
+
+        // --- ICONS ---
+        const Icons = {
+            Plane: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>,
+            Check: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>,
+            Alert: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>,
+            Clock: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+            Sync: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
+            Grid: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>,
+            List: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+        };
 
         function Dashboard() {
             const [aircraft, setAircraft] = useState([]);
@@ -70,7 +92,7 @@
             const [syncing, setSyncing] = useState(false);
             const [nextSync, setNextSync] = useState(300);
             const [loading, setLoading] = useState(true);
-            const [viewMode, setViewMode] = useState('table'); // Default to table for elegance
+            const [viewMode, setViewMode] = useState('table');
             const [filterStatus, setFilterStatus] = useState('ALL');
 
             const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=0&single=true&output=csv';
@@ -141,178 +163,202 @@
                 }
             }
 
-            function getStatusColor(status) {
+            // Refined Colors
+            function getStatusStyle(status) {
                 const s = status?.toUpperCase();
-                if (s === 'SERVICEABLE') return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
-                if (s === 'MRO') return 'bg-amber-100 text-amber-700 border border-amber-200';
-                if (s === 'AOG') return 'bg-rose-100 text-rose-700 border border-rose-200';
-                return 'bg-slate-100 text-slate-600 border border-slate-200';
+                if (s === 'SERVICEABLE') return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', dot: 'bg-emerald-500' };
+                if (s === 'MRO') return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' };
+                if (s === 'AOG') return { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', dot: 'bg-rose-500' };
+                return { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200', dot: 'bg-slate-400' };
+            }
+
+            // Logic to determine "Ready for Dispatch"
+            function getAlertStatus(ac, isCritical) {
+                const remarksClean = ac.remarks ? ac.remarks.trim() : '';
+                const isServiceable = ac.status?.toUpperCase() === 'SERVICEABLE';
+                
+                // If it is critical (timer low), show Warning
+                if (isCritical) {
+                    return { 
+                        type: 'CRITICAL', 
+                        content: <span className="flex items-center gap-1.5 text-rose-600 font-bold animate-pulse">
+                            <Icons.Alert /> COMPLETE INSP
+                        </span> 
+                    };
+                }
+                
+                // If Serviceable, NOT critical, and NO remarks (or remarks are "Normal")
+                if (isServiceable && (!remarksClean || remarksClean.toUpperCase() === 'NORMAL')) {
+                    return { 
+                        type: 'READY', 
+                        content: <span className="flex items-center gap-1.5 text-emerald-600 font-bold tracking-wide">
+                            <Icons.Check /> Ready for Dispatch
+                        </span> 
+                    };
+                }
+
+                // Default: Show the remark or empty dash
+                return { 
+                    type: 'INFO', 
+                    content: <span className="text-slate-500 font-medium">{remarksClean || '-'}</span> 
+                };
             }
 
             if (loading) {
                 return (
                     <div className="min-h-screen flex items-center justify-center">
                         <div className="text-center">
-                            <div className="text-white text-6xl mb-4 float">✈️</div>
-                            <div className="text-white font-bold text-xl uppercase tracking-widest">Initialising Fleet Systems...</div>
+                            <div className="text-white text-5xl mb-6 float opacity-80">✈️</div>
+                            <div className="text-slate-200 font-medium text-lg uppercase tracking-[0.3em]">Fleet Systems Initializing</div>
                         </div>
                     </div>
                 );
             }
 
             const filteredAircraft = filterStatus === 'ALL' ? aircraft : aircraft.filter(ac => ac.status?.toUpperCase() === filterStatus);
-            const statusCounts = {
-                SERVICEABLE: aircraft.filter(a => a.status?.toUpperCase() === 'SERVICEABLE').length,
-                MRO: aircraft.filter(a => a.status?.toUpperCase() === 'MRO').length,
-                AOG: aircraft.filter(a => a.status?.toUpperCase() === 'AOG').length,
-                TOTAL: aircraft.length
-            };
-
-            const CircularProgress = ({ percentage, color, label, count }) => {
-                const radius = 40;
-                const circumference = 2 * Math.PI * radius;
-                const offset = circumference - (percentage / 100) * circumference;
-                
-                return (
-                    <div className="flex flex-col items-center group cursor-default">
-                        <div className="relative">
-                            <svg width="100" height="100" className="transform -rotate-90">
-                                <circle cx="50" cy="50" r={radius} stroke="#e2e8f0" strokeWidth="6" fill="none" />
-                                <circle 
-                                    cx="50" cy="50" r={radius} 
-                                    stroke={color} 
-                                    strokeWidth="6" 
-                                    fill="none"
-                                    strokeDasharray={circumference}
-                                    strokeDashoffset={offset}
-                                    className="progress-ring"
-                                    strokeLinecap="round"
-                                />
-                            </svg>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-2xl font-black group-hover:scale-110 transition-transform" style={{color: color}}>{count}</span>
-                            </div>
-                        </div>
-                        <div className="mt-2 text-center">
-                            <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{label}</div>
-                        </div>
-                    </div>
-                );
-            };
 
             const AircraftCard = ({ ac, index }) => {
                 const dailyTime = calculateTime(ac.dailyInsp);
                 const weeklyTime = calculateTime(ac.weeklyInsp);
                 const showAlerts = ac.status?.toUpperCase() !== 'AOG' && ac.status?.toUpperCase() !== 'MRO';
                 const isCritical = showAlerts && (dailyTime.hours <= 3 || weeklyTime.hours <= 3);
+                const styles = getStatusStyle(ac.status);
+                const alertStatus = getAlertStatus(ac, isCritical);
                 
                 return (
-                    <div className="glass-effect rounded-2xl p-6 card-hover shadow-lg">
-                        <div className="flex justify-between items-start mb-4">
+                    <div className="glass-effect rounded-2xl p-6 card-hover relative overflow-hidden group">
+                        {/* Status Bar Top */}
+                        <div className={`absolute top-0 left-0 w-full h-1 ${styles.dot.replace('bg-', 'bg-gradient-to-r from-white via-')}`}></div>
+
+                        <div className="flex justify-between items-start mb-6">
                             <div>
-                                <div className="text-xs text-slate-400 font-bold mb-1">REG #{ac.slNo}</div>
-                                <div className="text-2xl font-black text-blue-600">{ac.registration}</div>
+                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Registration</div>
+                                <div className="text-3xl font-black text-slate-800 tracking-tight">{ac.registration}</div>
                             </div>
-                            <span className={'px-3 py-2 rounded-lg text-xs font-black uppercase ' + getStatusColor(ac.status)}>
-                                {ac.status}
-                            </span>
+                            <div className={`px-3 py-1.5 rounded-full border ${styles.bg} ${styles.border} ${styles.text} flex items-center gap-2 shadow-sm`}>
+                                <div className={`w-2 h-2 rounded-full ${styles.dot} animate-pulse`}></div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider">{ac.status}</span>
+                            </div>
                         </div>
                         
-                        <div className="space-y-3 mb-4">
-                            <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                                <div className="text-xs text-slate-500 font-bold mb-1">📅 Daily Inspection</div>
-                                <div className="text-sm font-mono text-slate-700">{ac.dailyInsp || 'N/A'}</div>
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                            <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100/50 hover:bg-white transition-colors">
+                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">Daily Insp</div>
+                                <div className="text-sm font-mono font-semibold text-slate-700">{ac.dailyInsp || '--:--'}</div>
                                 {dailyTime.hours < 24 && !dailyTime.overdue && dailyTime.hours !== 999 && (
-                                    <div className="text-xs font-bold text-orange-600 mt-1">⏰ {dailyTime.hours}h remaining</div>
+                                    <div className="text-[10px] font-bold text-amber-600 mt-1 flex items-center gap-1">
+                                        <Icons.Clock /> {dailyTime.hours}h left
+                                    </div>
                                 )}
                             </div>
-                            
-                            <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                                <div className="text-xs text-slate-500 font-bold mb-1">📋 Weekly Inspection</div>
-                                <div className="text-sm font-mono text-slate-700">{ac.weeklyInsp || 'N/A'}</div>
+                            <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100/50 hover:bg-white transition-colors">
+                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">Weekly Insp</div>
+                                <div className="text-sm font-mono font-semibold text-slate-700">{ac.weeklyInsp || '--:--'}</div>
                                 {weeklyTime.hours < 48 && !weeklyTime.overdue && weeklyTime.hours !== 999 && (
-                                    <div className="text-xs font-bold text-orange-600 mt-1">⏰ {weeklyTime.hours}h remaining</div>
+                                    <div className="text-[10px] font-bold text-amber-600 mt-1 flex items-center gap-1">
+                                        <Icons.Clock /> {weeklyTime.hours}h left
+                                    </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="border-t border-slate-200 pt-3">
-                            <div className="text-xs text-slate-500 font-bold mb-2">MEL Status</div>
-                            {ac.status === 'MRO' ? (
-                                <span className="text-slate-400 text-sm">Under Maintenance</span>
-                            ) : ac.mel && ac.mel.trim() ? (
-                                <span className="text-red-600 font-bold text-sm">{ac.mel}</span>
-                            ) : (
-                                <span className="text-blue-600 font-bold text-sm">NIL</span>
-                            )}
-                        </div>
-
-                        {isCritical && (
-                            <div className="mt-3 insp-badge blink w-full justify-center">
-                                ⚠️ COMPLETE INSPECTION
+                        <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
+                            <div>
+                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">MEL Items</div>
+                                {ac.mel && ac.mel.trim() ? (
+                                    <span className="text-rose-600 font-bold text-xs bg-rose-50 px-2 py-1 rounded border border-rose-100">{ac.mel}</span>
+                                ) : (
+                                    <span className="text-slate-400 text-xs font-medium">None</span>
+                                )}
                             </div>
-                        )}
+                            <div className="text-right">
+                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">Status Check</div>
+                                <div className="text-xs">
+                                    {alertStatus.content}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 );
             };
 
             return (
-                <div className="min-h-screen p-6 font-sans flex flex-col">
-                    <div className="max-w-7xl mx-auto w-full flex-grow">
+                <div className="min-h-screen p-4 lg:p-8 font-sans flex flex-col pb-20">
+                    <div className="max-w-[1400px] mx-auto w-full flex-grow">
                         
                         {/* HEADER */}
-                        <div className="glass-effect rounded-3xl shadow-2xl p-8 mb-6">
-                            <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-                                <div className="text-center lg:text-left">
-                                    <div className="flex items-center gap-3 justify-center lg:justify-start mb-2">
-                                        <span className="text-4xl float">✈️</span>
-                                        <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                                            Fleet Command Center
-                                        </h1>
-                                    </div>
-                                    <p className="text-slate-600 font-bold text-sm">Real-time Aircraft Monitoring & Maintenance Intelligence</p>
+                        <div className="glass-effect rounded-3xl p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                            
+                            <div className="flex items-center gap-5 z-10">
+                                <div className="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20 float">
+                                    <Icons.Plane />
                                 </div>
-                                <div className="bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-lg">
-                                    <div className="font-mono text-4xl font-bold tracking-wider">
+                                <div>
+                                    <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Fleet Command</h1>
+                                    <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Live Operations Dashboard
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-6 z-10">
+                                <div className="text-right hidden md:block">
+                                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">System Time (UTC)</div>
+                                    <div className="font-mono text-xl font-bold text-slate-700">
                                         {currentTime.getUTCHours().toString().padStart(2, '0')}:
                                         {currentTime.getUTCMinutes().toString().padStart(2, '0')}:
                                         {currentTime.getUTCSeconds().toString().padStart(2, '0')}
                                     </div>
-                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mt-1">UTC</div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* FILTERS */}
-                        <div className="glass-effect rounded-2xl p-4 mb-6 shadow-lg">
-                            <div className="flex flex-wrap gap-3 items-center justify-between">
-                                <div className="flex gap-2 flex-wrap">
-                                    <button onClick={() => setFilterStatus('ALL')} className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${filterStatus === 'ALL' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>
-                                        All Aircraft
+                        {/* CONTROLS */}
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            
+                            {/* Filter Tabs */}
+                            <div className="glass-effect p-1.5 rounded-xl flex gap-1 shadow-sm overflow-x-auto max-w-full">
+                                {['ALL', 'SERVICEABLE', 'MRO', 'AOG'].map(status => (
+                                    <button 
+                                        key={status}
+                                        onClick={() => setFilterStatus(status)} 
+                                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                                            filterStatus === status 
+                                            ? 'bg-slate-800 text-white shadow-md' 
+                                            : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                                        }`}
+                                    >
+                                        {status === 'ALL' ? 'All Fleet' : status}
                                     </button>
-                                    <button onClick={() => setFilterStatus('SERVICEABLE')} className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${filterStatus === 'SERVICEABLE' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>
-                                        Serviceable
+                                ))}
+                            </div>
+
+                            {/* View Toggle & Sync */}
+                            <div className="flex gap-3">
+                                <div className="glass-effect p-1 rounded-lg flex">
+                                    <button onClick={() => setViewMode('table')} className={`p-2 rounded-md transition-all ${viewMode === 'table' ? 'bg-white shadow text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <Icons.List />
                                     </button>
-                                    <button onClick={() => setFilterStatus('MRO')} className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${filterStatus === 'MRO' ? 'bg-amber-600 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>
-                                        MRO
-                                    </button>
-                                    <button onClick={() => setFilterStatus('AOG')} className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${filterStatus === 'AOG' ? 'bg-rose-600 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>
-                                        AOG
+                                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <Icons.Grid />
                                     </button>
                                 </div>
-                                <div className="flex gap-2">
-                                    
-                                  
-                                    <button onClick={() => setViewMode('table')} className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${viewMode === 'table' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>
-                                        📋 Table
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={syncFromGoogleSheet}
+                                    disabled={syncing}
+                                    className="glass-effect px-4 py-2 rounded-lg text-xs font-bold text-slate-600 flex items-center gap-2 hover:bg-white transition-all border hover:border-blue-200 active:scale-95"
+                                >
+                                    <span className={syncing ? 'animate-spin' : ''}><Icons.Sync /></span>
+                                    {syncing ? 'Syncing...' : `Refresh (${Math.floor(nextSync / 60)}:${String(nextSync % 60).padStart(2, '0')})`}
+                                </button>
                             </div>
                         </div>
 
                         {/* GRID VIEW */}
                         {viewMode === 'grid' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-[pulse-soft_0.5s_ease-out]">
                                 {filteredAircraft.map((ac, i) => (
                                     <AircraftCard key={i} ac={ac} index={i} />
                                 ))}
@@ -321,53 +367,65 @@
 
                         {/* TABLE VIEW */}
                         {viewMode === 'table' && (
-                            <div className="glass-effect rounded-2xl shadow-xl overflow-hidden mb-10">
+                            <div className="glass-effect rounded-2xl shadow-sm overflow-hidden border border-white/50 animate-[pulse-soft_0.5s_ease-out]">
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left">
+                                    <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="bg-slate-900 text-white text-xs font-black uppercase tracking-wider">
-                                                <th className="px-6 py-5">No</th>
-                                                <th className="px-6 py-5">Registration</th>
-                                                <th className="px-6 py-5 text-center">Status</th>
-                                                <th className="px-6 py-5">Daily Insp</th>
-                                                <th className="px-6 py-5">Weekly Insp</th>
-                                                <th className="px-6 py-5">MEL</th>
-                                                <th className="px-6 py-5">Alerts</th>
+                                            <tr className="glass-header text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200/60">
+                                                <th className="px-6 py-4 font-extrabold text-slate-300 w-16">#</th>
+                                                <th className="px-6 py-4">Aircraft</th>
+                                                <th className="px-6 py-4 text-center">Status</th>
+                                                <th className="px-6 py-4">Daily Check</th>
+                                                <th className="px-6 py-4">Weekly Check</th>
+                                                <th className="px-6 py-4">MEL / Defects</th>
+                                                <th className="px-6 py-4">Remarks / Alerts</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100 bg-white">
+                                        <tbody className="divide-y divide-slate-100 bg-white/40">
                                             {filteredAircraft.map((ac, i) => {
                                                 const dailyTime = calculateTime(ac.dailyInsp);
                                                 const weeklyTime = calculateTime(ac.weeklyInsp);
                                                 const showAlerts = ac.status?.toUpperCase() !== 'AOG' && ac.status?.toUpperCase() !== 'MRO';
                                                 const isCritical = showAlerts && (dailyTime.hours <= 3 || weeklyTime.hours <= 3);
-                                                
+                                                const styles = getStatusStyle(ac.status);
+                                                const alertStatus = getAlertStatus(ac, isCritical);
+
                                                 return (
-                                                    <tr key={i} className="hover:bg-blue-50 transition-colors">
-                                                        <td className="px-6 py-4 text-xs font-bold text-slate-400">{ac.slNo}</td>
-                                                        <td className="px-6 py-4 text-sm font-black text-blue-700">{ac.registration}</td>
+                                                    <tr key={i} className="hover:bg-white/60 transition-colors group">
+                                                        <td className="px-6 py-4 text-xs font-bold text-slate-300">{ac.slNo}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className="text-sm font-bold text-slate-800 font-mono tracking-tight">{ac.registration}</span>
+                                                            <div className="text-[10px] text-slate-400 font-medium">{ac.type}</div>
+                                                        </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <span className={'px-3 py-1 rounded-md text-xs font-black uppercase ' + getStatusColor(ac.status)}>
+                                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${styles.bg} ${styles.text} border ${styles.border}`}>
+                                                                <span className={`w-1.5 h-1.5 rounded-full ${styles.dot}`}></span>
                                                                 {ac.status}
                                                             </span>
                                                         </td>
-                                                        <td className="px-6 py-4 text-sm font-bold text-slate-600">{ac.dailyInsp}</td>
-                                                        <td className="px-6 py-4 text-sm font-bold text-slate-600">{ac.weeklyInsp}</td>
-                                                        <td className="px-6 py-4 text-sm font-medium">
-                                                            {ac.status === 'MRO' ? (
-                                                                <span className="text-slate-300">-</span>
-                                                            ) : ac.mel && ac.mel.trim() ? (
-                                                                <span className="text-red-600 font-bold">{ac.mel}</span>
-                                                            ) : (
-                                                                <span className="text-blue-600 font-bold">NIL</span>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-xs font-medium text-slate-600 font-mono">{ac.dailyInsp}</div>
+                                                            {dailyTime.hours < 24 && !dailyTime.overdue && dailyTime.hours !== 999 && (
+                                                                <div className="text-[10px] font-bold text-amber-600 mt-0.5">{dailyTime.hours}h remaining</div>
                                                             )}
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            {isCritical ? (
-                                                                <span className="insp-badge blink">⚠️ COMPLETE INSP</span>
-                                                            ) : (
-                                                                <span className="text-slate-500 text-sm font-medium italic">{ac.remarks || 'Normal'}</span>
+                                                            <div className="text-xs font-medium text-slate-600 font-mono">{ac.weeklyInsp}</div>
+                                                            {weeklyTime.hours < 48 && !weeklyTime.overdue && weeklyTime.hours !== 999 && (
+                                                                <div className="text-[10px] font-bold text-amber-600 mt-0.5">{weeklyTime.hours}h remaining</div>
                                                             )}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm">
+                                                            {ac.status === 'MRO' ? (
+                                                                <span className="text-slate-300 text-xs italic">Maintenance</span>
+                                                            ) : ac.mel && ac.mel.trim() ? (
+                                                                <span className="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded text-xs">{ac.mel}</span>
+                                                            ) : (
+                                                                <span className="text-slate-300 font-bold text-xs">NIL</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm">
+                                                            {alertStatus.content}
                                                         </td>
                                                     </tr>
                                                 );
@@ -375,45 +433,12 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <div className="px-6 py-3 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
+                                    <div className="text-[10px] text-slate-400 font-medium">Showing {filteredAircraft.length} Aircraft</div>
+                                </div>
                             </div>
                         )}
-
-                        {/* FOOTER DASHBOARD (STATS + SYNC) */}
-                        <div className="glass-effect rounded-3xl p-6 shadow-2xl border-t border-white/40">
-                            <div className="flex flex-col xl:flex-row items-center justify-between gap-8">
-                                
-                                {/* MOVED STATS HERE */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 flex-grow w-full xl:w-auto">
-                                    
-                                    
-                                </div>
-
-                                {/* Divider for desktop */}
-                                <div className="hidden xl:block w-px h-24 bg-gradient-to-b from-transparent via-slate-300 to-transparent"></div>
-
-                                {/* SYNC CONTROLS */}
-                                <div className="flex flex-col gap-3 min-w-[220px] w-full xl:w-auto">
-                                    <div className="flex items-center justify-between bg-slate-50/80 rounded-xl p-3 border border-slate-100 shadow-inner">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Live</span>
-                                        </div>
-                                        <span className="text-sm font-mono font-black text-slate-700">
-                                            {Math.floor(nextSync / 60)}:{String(nextSync % 60).padStart(2, '0')}
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={syncFromGoogleSheet}
-                                        disabled={syncing}
-                                        className="w-full px-6 py-3 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-50 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                                    >
-                                        {syncing ? 'Syncing...' : 'Force Sync'}
-                                    </button>
-                                </div>
-
-                            </div>
-                        </div>
-
+                        
                     </div>
                 </div>
             );
