@@ -49,9 +49,9 @@
         }
 
         .glass-header {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-bottom: 2px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(0,0,0,0.08);
         }
 
         .card-hover {
@@ -78,8 +78,8 @@
         // --- ICONS ---
         const Icons = {
             Plane: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>,
-            Check: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>,
-            Alert: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>,
+            Check: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>,
+            Alert: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>,
             Clock: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
             Sync: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
             Grid: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>,
@@ -182,7 +182,7 @@
                 if (isCritical) {
                     return { 
                         type: 'CRITICAL', 
-                        content: <span className="flex items-center gap-1.5 text-rose-600 font-bold animate-pulse text-base">
+                        content: <span className="flex items-center gap-1.5 text-rose-600 font-bold animate-pulse text-[15px]">
                             <Icons.Alert /> COMPLETE INSP
                         </span> 
                     };
@@ -192,7 +192,7 @@
                 if (isServiceable && (!remarksClean || remarksClean.toUpperCase() === 'NORMAL')) {
                     return { 
                         type: 'READY', 
-                        content: <span className="flex items-center gap-1.5 text-emerald-600 font-bold tracking-wide text-base">
+                        content: <span className="flex items-center gap-1.5 text-emerald-600 font-bold tracking-wide text-[15px]">
                             <Icons.Check /> Ready for Dispatch
                         </span> 
                     };
@@ -201,7 +201,7 @@
                 // Default: Show the remark or empty dash
                 return { 
                     type: 'INFO', 
-                    content: <span className="text-slate-500 font-bold text-base">{remarksClean || '-'}</span> 
+                    content: <span className="text-slate-500 font-bold text-[15px]">{remarksClean || '-'}</span> 
                 };
             }
 
@@ -372,14 +372,14 @@
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="glass-header text-base font-extrabold text-slate-500 uppercase tracking-wider border-b border-slate-200/60">
-                                                <th className="px-6 py-5 w-20">#</th>
-                                                <th className="px-6 py-5">Aircraft</th>
-                                                <th className="px-6 py-5 text-center">Status</th>
-                                                <th className="px-6 py-5">Daily Check</th>
-                                                <th className="px-6 py-5">Weekly Check</th>
-                                                <th className="px-6 py-5">MEL / Defects</th>
-                                                <th className="px-6 py-5">Remarks / Alerts</th>
+                                            <tr className="glass-header text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                <th className="px-6 py-4 w-16">#</th>
+                                                <th className="px-6 py-4">Aircraft</th>
+                                                <th className="px-6 py-4 text-center">Status</th>
+                                                <th className="px-6 py-4">Daily Check</th>
+                                                <th className="px-6 py-4">Weekly Check</th>
+                                                <th className="px-6 py-4">MEL / Defects</th>
+                                                <th className="px-6 py-4">Remarks / Alerts</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 bg-white/40">
@@ -393,40 +393,40 @@
 
                                                 return (
                                                     <tr key={i} className="hover:bg-white/60 transition-colors group">
-                                                        <td className="px-6 py-4 text-base font-bold text-slate-400">{ac.slNo}</td>
+                                                        <td className="px-6 py-4 text-[15px] font-bold text-slate-400">{ac.slNo}</td>
                                                         <td className="px-6 py-4">
-                                                            <span className="text-xl font-black text-slate-800 font-mono tracking-tight">{ac.registration}</span>
-                                                            <div className="text-xs text-slate-400 font-bold">{ac.type}</div>
+                                                            <span className="text-[15px] font-bold text-slate-800 font-mono tracking-tight">{ac.registration}</span>
+                                                            <div className="text-[11px] text-slate-400 font-bold">{ac.type}</div>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-black uppercase tracking-wider ${styles.bg} ${styles.text} border ${styles.border}`}>
-                                                                <span className={`w-2 h-2 rounded-full ${styles.dot}`}></span>
+                                                            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${styles.bg} ${styles.text} border ${styles.border}`}>
+                                                                <span className={`w-1.5 h-1.5 rounded-full ${styles.dot}`}></span>
                                                                 {ac.status}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <div className="text-lg font-bold text-slate-700 font-mono">{ac.dailyInsp}</div>
+                                                            <div className="text-[15px] font-bold text-slate-700 font-mono">{ac.dailyInsp}</div>
                                                             {dailyTime.hours <= SHOW_HOURS_THRESHOLD && !dailyTime.overdue && dailyTime.hours !== 999 && (
-                                                                <div className="text-sm font-black text-amber-600 mt-1 flex items-center gap-1">
+                                                                <div className="text-xs font-bold text-amber-600 mt-1 flex items-center gap-1">
                                                                     <Icons.Clock /> {dailyTime.hours}h left
                                                                 </div>
                                                             )}
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <div className="text-lg font-bold text-slate-700 font-mono">{ac.weeklyInsp}</div>
+                                                            <div className="text-[15px] font-bold text-slate-700 font-mono">{ac.weeklyInsp}</div>
                                                             {weeklyTime.hours <= SHOW_HOURS_THRESHOLD && !weeklyTime.overdue && weeklyTime.hours !== 999 && (
-                                                                <div className="text-sm font-black text-amber-600 mt-1 flex items-center gap-1">
+                                                                <div className="text-xs font-bold text-amber-600 mt-1 flex items-center gap-1">
                                                                     <Icons.Clock /> {weeklyTime.hours}h left
                                                                 </div>
                                                             )}
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             {ac.status === 'MRO' ? (
-                                                                <span className="text-slate-300 text-sm font-bold italic">Maintenance</span>
+                                                                <span className="text-slate-400 text-[13px] font-semibold italic">Maintenance</span>
                                                             ) : ac.mel && ac.mel.trim() ? (
-                                                                <span className="text-rose-600 font-bold bg-rose-50 px-3 py-1 rounded-md text-sm border border-rose-100">{ac.mel}</span>
+                                                                <span className="text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded text-xs border border-rose-100">{ac.mel}</span>
                                                             ) : (
-                                                                <span className="text-slate-300 font-bold text-sm">NIL</span>
+                                                                <span className="text-slate-300 font-bold text-xs">NIL</span>
                                                             )}
                                                         </td>
                                                         <td className="px-6 py-4">
