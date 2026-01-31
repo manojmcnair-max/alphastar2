@@ -1,132 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fleet Command | Aircraft Status</title>
-  
-  <!-- React -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      color-scheme: dark;
-    }
-
-    body {
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleet Command | Real-Time Aircraft Status</title>
     
-    @keyframes blink { 
-      0%, 50%, 100% { opacity: 1; } 
-      25%, 75% { opacity: 0.5; } 
-    }
-    .blink { animation: blink 1.5s ease-in-out infinite; }
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-6px); }
-    }
-    .float { animation: float 4s ease-in-out infinite; }
-
-    @keyframes pulse-soft {
-      0%, 100% { opacity: 1; transform: translateY(0); }
-      50% { opacity: 0.9; transform: translateY(-1px); }
-    }
-
-    .gradient-bg {
-      background:
-        radial-gradient(circle at top left, #1e293b 0, #020617 55%),
-        radial-gradient(circle at bottom right, #020617, #020617 80%);
-      background-attachment: fixed;
-      color: #334155;
-      position: relative;
-    }
-
-    .gradient-bg::before {
-      content: "";
-      position: fixed;
-      inset: -40%;
-      background:
-        radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.2), transparent 50%),
-        radial-gradient(circle at 90% 120%, rgba(129, 140, 248, 0.2), transparent 55%);
-      opacity: 0.7;
-      mix-blend-mode: screen;
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    /* Refined Glass Effect */
-    .glass-effect {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(248, 250, 252, 0.94));
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      box-shadow:
-        0 24px 60px rgba(15, 23, 42, 0.22),
-        0 0 0 1px rgba(255, 255, 255, 0.5);
-    }
-
-    .glass-header {
-      background: linear-gradient(90deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.98));
-      backdrop-filter: blur(18px);
-      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-    }
-
-    .card-hover {
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                  box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                  border-color 0.3s ease;
-    }
-    .card-hover:hover {
-      transform: translateY(-6px) translateZ(0);
-      box-shadow:
-        0 24px 50px -10px rgba(15, 23, 42, 0.25),
-        0 0 0 1px rgba(59, 130, 246, 0.18);
-      border-color: rgba(59, 130, 246, 0.35);
-    }
-
-    /* Soft animated background grid */
-    .bg-grid {
-      background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.35) 1px, transparent 0);
-      background-size: 22px 22px;
-      opacity: 0.12;
-      pointer-events: none;
-    }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-  </style>
-</head>
-<body class="gradient-bg min-h-screen text-slate-800">
-  <div id="root"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-
-    // --- ICONS ---
-    const Icons = {
-      Plane: () => (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-        </svg>
-      ),
-      Check: () => (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-        </svg>
-      ),
-      Alert: () => (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fleet-dark': '#0a0f1d',
+                        'fleet-darker': '#070b16',
+                        'fleet-blue': '#2563eb',
+                        'fleet-cyan': '#06b6d4',
+                        'fleet-emerald': '#10b981',
+                        'fleet-amber': '#f59e0b',
+                        'fleet-rose': '#ef4444',
+                        'fleet-slate': '#64748b'
+                    },
+                    animation: {
+                        'pulse-soft': 'pulse-soft 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'gradient-x': 'gradient-x 15s ease infinite alternate',
+                        'status-pulse': 'status-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: {
+                        'pulse-soft': {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.92' }
+                        },
+                        'float': {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        },
+                        'gradient-x': {
+                            '0%': { 'background-position': '0% 50%' },
+                            '100%': { 'background-position': '100% 50%' }
+                        },
+                        'status-pulse': {
+                            '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+                            '50%': { opacity: '0.8', transform: 'scale(1.05)' }
+                        }
+                    },
+                    backgroundImage: {
+                        'gradient-grid': `
+                            linear-gradient(rgba(30, 58, 138, 0.15) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(30, 58, 138, 0.15) 1px, transparent 1px)
+                        `,
+                        'status-gradient': `
+                            linear-gradient(90deg, 
+                                rgba(34, 197, 94, 0.15) 0%, 
+                                rgba(59, 130, 246, 0.15) 50%, 
+                                rgba(245, 158, 11, 0.15) 100%)
