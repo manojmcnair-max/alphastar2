@@ -1,648 +1,517 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fleet Command | Real-Time Aircraft Status (Vanilla)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleet Command | OPS CENTER</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 
-  <!-- Keep CSP compatible with GitHub Pages + proxy CSV fetch -->
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' https:; 
-                 script-src 'self' https: 'unsafe-inline' https://cdn.tailwindcss.com https://api.allorigins.win https://corsproxy.io; 
-                 style-src 'self' https: 'unsafe-inline'; 
-                 img-src 'self' https: data:; 
-                 connect-src 'self' https: https://api.allorigins.win https://corsproxy.io;">
-
-  <!-- Tailwind CDN for fast styling (optional, but matches your original approach) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <style>
- :root { --topbar-h: 40px; }
-@media (max-width: 768px) { :root { --topbar-h: 56px; } }
- {
-      --status-serviceable: #10b981;
-      --status-mro: #f59e0b;
-      --status-aog: #ef4444;
-      --status-default: #64748b;
-    }
-
-    * { scrollbar-width: thin; scrollbar-color: rgba(56, 189, 248, 0.3) transparent; }
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(56, 189, 248, 0.35);
-      border-radius: 10px;
-      border: 2px solid transparent;
-      background-clip: content-box;
-    }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.6); }
-
-body{
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #0f172a;
-  overflow-x: hidden;
-  margin: 0;
-  padding-top: 2.5rem;
-
-  background:
-    radial-gradient(circle at 10% 15%, rgba(56, 189, 248, 0.35) 0%, transparent 40%),
-    radial-gradient(circle at 90% 20%, rgba(99, 102, 241, 0.22) 0%, transparent 42%),
-    radial-gradient(circle at 80% 85%, rgba(16, 185, 129, 0.18) 0%, transparent 45%),
-    linear-gradient(180deg, #f8fafc 0%, #eef2ff 55%, #f1f5f9 100%);
-  background-attachment: fixed;
-}
-
-
-    .gradient-border{ position:relative; border-radius:inherit; }
-    .gradient-border::before{
-      content:'';
-      position:absolute; inset:0; padding:1.5px;
-      background: linear-gradient(120deg, #38bdf8, #8b5cf6, #22d3ee, #38bdf8);
-      background-size: 300% 300%;
-      border-radius: inherit;
-      animation: gradient-x 15s ease infinite alternate;
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events:none;
-    }
-    @keyframes gradient-x{
-      0%{ background-position:0% 50%; }
-      100%{ background-position:100% 50%; }
-    }
-
-    .card-glow{ position:relative; overflow:hidden; transition: all .35s ease; border:1px solid rgba(255,255,255,.08); }
-    .card-glow::after{
-      content:'';
-      position:absolute; top:-50%; left:-50%;
-      width:200%; height:200%;
-      background: radial-gradient(circle, rgba(56,189,248,.15) 0%, transparent 70%);
-      opacity:0; transition: opacity .45s ease;
-      pointer-events:none; z-index:0;
-    }
-    .card-glow:hover::after{ opacity:1; }
-    .card-content{ position:relative; z-index:1; }
-
-    .status-bar{
-      height:4px; border-radius:2px 2px 0 0;
-      background: linear-gradient(90deg, var(--status-color), transparent);
-      position:absolute; top:0; left:0; right:0;
-      animation: status-pulse 2s ease-in-out infinite;
-    }
-    @keyframes status-pulse{
-      0%,100%{ opacity:1; transform:scale(1); }
-      50%{ opacity:.82; transform:scale(1.03); }
-    }
-
-    .status-dot{
-      display:inline-block;
-      width:10px; height:10px; border-radius:50%;
-      margin-right:6px; flex-shrink:0;
-      box-shadow:0 0 0 2px currentColor;
-    }
-    .status-serviceable{ background-color: var(--status-serviceable); }
-    .status-mro{ background-color: var(--status-mro); }
-    .status-aog{ background-color: var(--status-aog); animation: blink 1.5s ease-in-out infinite; }
-    .status-default{ background-color: var(--status-default); }
-
-    @keyframes blink{ 0%,49%{opacity:1} 50%,100%{opacity:.5} }
-
-    .table-header-sticky{
-      position: sticky;
-      top: 2.5rem;
-      z-index: 20;
-      backdrop-filter: blur(12px);
-      background: rgba(15, 23, 42, 0.85);
-      box-shadow: 0 4px 20px rgba(0,0,0,.35);
-    }
-
-    @media (max-width: 768px){
-      body { padding-top: var(--topbar-h); }
-
-.table-header-sticky { top: var(--topbar-h); }
-
-      .mobile-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-      .min-w-table{ min-width: 900px; }
-    }
-  </style>
-
-  <script>
-    // Same proxy fetch strategy as your original file [Source](https://www.genspark.ai/api/files/s/IRVVsDaT)
-    window.fetchGoogleSheet = async (url) => {
-      const proxies = [
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        `https://corsproxy.io/?${encodeURIComponent(url)}`
-      ];
-
-      for (const proxy of proxies) {
-        try {
-          const res = await fetch(proxy, { mode: 'cors' });
-          if (res.ok) return await res.text();
-        } catch (e) {
-          console.warn(`Proxy failed: ${proxy}`, e);
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            color: #e2e8f0;
+            min-height: 100vh;
         }
-      }
 
-      console.error("All data sources failed. Using demo data.");
-      return `Sl No,Registration,Type,Status,Daily Insp,Weekly Insp,MEL,Remarks
-1,VT-ABC,A320,SERVICEABLE,25/01/2026 14:30,01/02/2026 09:00,,Normal
-2,VT-XYZ,B737,MRO,20/01/2026 10:00,28/01/2026 16:00,Hydraulic leak,Under maintenance
-3,VT-DEF,A321,AOG,18/01/2026 08:00,25/01/2026 11:00,Engine fault,Critical repair
-4,VT-GHI,E190,SERVICEABLE,26/01/2026 16:45,02/02/2026 10:30,,Normal
-5,VT-JKL,A320,MRO,19/01/2026 11:20,27/01/2026 14:15,Auxiliary power unit,Scheduled maintenance`;
-    };
-  </script>
+        /* Tech Grid Background */
+        .tech-grid {
+            background-size: 40px 40px;
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Animations */
+        @keyframes radar-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .radar-pulse { animation: radar-pulse 2s infinite; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+        }
+        .float { animation: float 6s ease-in-out infinite; }
+
+        /* Glass Cards */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(148, 163, 184, 0.3);
+            box-shadow: 0 20px 40px -5px rgba(0,0,0,0.4);
+        }
+
+        .status-badge {
+            box-shadow: 0 0 15px -3px currentColor;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
 </head>
+<body>
+    <div class="tech-grid"></div>
+    <div id="root"></div>
 
-<body class="min-h-screen">
-  <!-- SYSTEM STATUS BAR -->
-  <div id="sysbar" class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-slate-950 to-slate-900 border-b border-blue-500/20 backdrop-blur-sm" role="status" aria-live="polite">
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-10">
-        <div class="flex items-center gap-2">
-          <div id="sysdot" class="w-2 h-2 rounded-full bg-amber-500"></div>
-          <span id="sysmsg" class="text-xs font-mono font-bold tracking-wider text-slate-700">SYSTEM INITIALIZING</span>
-        </div>
-        <div id="lastsync" class="text-xs font-mono text-slate-400">Awaiting first sync...</div>
-      </div>
-    </div>
-  </div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- HEADER -->
-    <div class="pt-9 pb-3">
-      <div class="gradient-border rounded-3xl overflow-hidden">
-        <div class="bg-gradient-to-br from-slate-950 to-slate-900 p-6 md:p-8 relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -mr-24 -mt-24"></div>
-          <div class="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl -ml-20 -mb-20"></div>
+        // --- ENHANCED ICONS ---
+        const Icons = {
+            Plane: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>,
+            PlaneFill: () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M2 12h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V8l4-5h3l-2 5h3l1-2h2l-2.5 6 2.5 6h-2l-1-2h-3l2 5h-3l-4-5v-6a2 2 0 0 0-2-2H4a2 2 0 0 1-2 2z"/></svg>,
+            Turbine: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4m15.364 6.364l-12.728-12.728m12.728 0L6.364 19.364" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" /></svg>,
+            Wrench: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></svg>,
+            Check: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>,
+            Alert: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>,
+            Clock: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+            Calendar: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+            Sync: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
+            Grid: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>,
+            List: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
+            Radar: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+        };
 
-          <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div class="flex items-center gap-5">
-              <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30 border border-white/20">
-                <span class="text-2xl font-black">✈</span>
-              </div>
-              <div>
-                <h1 class="text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-cyan-300 tracking-tight">
-                  FLEET COMMAND
-                </h1>
-                <p class="text-slate-700 font-medium text-base mt-1 flex items-center gap-2.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Real-Time Aircraft Status & Maintenance Dashboard
-                </p>
-              </div>
-            </div>
+        function Dashboard() {
+            const [aircraft, setAircraft] = useState([]);
+            const [currentTime, setCurrentTime] = useState(new Date());
+            const [syncing, setSyncing] = useState(false);
+            const [nextSync, setNextSync] = useState(300);
+            const [loading, setLoading] = useState(true);
+            const [viewMode, setViewMode] = useState('table');
+            const [filterStatus, setFilterStatus] = useState('ALL');
 
-            <div class="text-right">
-              <div class="text-xs font-bold text-blue-200 uppercase tracking-widest mb-1.5">SYSTEM TIME (UTC)</div>
-              <div id="utcClock" class="font-mono text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">
-                00:00:00
-              </div>
-            </div>
-          </div>
+            const SHOW_HOURS_THRESHOLD = 15;
+            const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=0&single=true&output=csv';
 
-        </div>
-      </div>
-    </div>
+            async function syncFromGoogleSheet() {
+                setSyncing(true);
+                try {
+                    let response = await fetch(SHEET_URL);
+                    if (!response.ok) {
+                        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                        response = await fetch(proxyUrl + encodeURIComponent(SHEET_URL));
+                    }
+                    const csvText = await response.text();
+                    const lines = csvText.trim().split('\n');
+                    const parsedData = lines.slice(1).map(line => {
+                        const cols = line.split(',').map(col => col.trim().replace(/"/g, ''));
+                        return {
+                            slNo: parseInt(cols[0]),
+                            registration: cols[1],
+                            type: cols[2],
+                            status: cols[3],
+                            dailyInsp: cols[4],
+                            weeklyInsp: cols[5],
+                            mel: cols[6] || '',
+                            remarks: cols[7] || ''
+                        };
+                    }).filter(row => row.registration && !isNaN(row.slNo));
 
-    <!-- CONTROLS -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-7">
-      <div class="gradient-border rounded-xl overflow-hidden">
-        <div class="bg-white/60 backdrop-blur-md border border-slate-200/70"
->
-          <!-- buttons injected -->
-        </div>
-      </div>
+                    if (parsedData.length > 0) {
+                        setAircraft(parsedData);
+                        setNextSync(300);
+                    }
+                } catch (error) {
+                    console.error('Sync error:', error);
+                } finally {
+                    setSyncing(false);
+                    setLoading(false);
+                }
+            }
 
-      <div class="flex flex-wrap items-center gap-3">
-     
+            useEffect(() => {
+                syncFromGoogleSheet();
+                const timeTimer = setInterval(() => setCurrentTime(new Date()), 1000);
+                const countdownTimer = setInterval(() => {
+                    setNextSync(prev => {
+                        if (prev <= 1) {
+                            syncFromGoogleSheet();
+                            return 300;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+                return () => { clearInterval(timeTimer); clearInterval(countdownTimer); };
+            }, []);
 
-        <button id="btnSync"
-          class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-500/20 text-blue-200 border border-blue-500/40 hover:bg-blue-500/30 transition">
-          Sync Now
-        </button>
+            function calculateTime(dateStr) {
+                if (!dateStr || dateStr.trim() === "") return { hours: 999, overdue: false };
+                try {
+                    const parts = dateStr.split(' ');
+                    const datePart = parts[0].split('/');
+                    const timePart = parts[1].split(':');
+                    const due = new Date(Date.UTC(datePart[2], datePart[1] - 1, datePart[0], timePart[0], timePart[1]));
+                    const diffMs = due - new Date();
+                    const hours_remaining = Math.floor(diffMs / 3600000);
+                    return { hours: hours_remaining, overdue: hours_remaining < 0 };
+                } catch (e) {
+                    return { hours: 999, overdue: false };
+                }
+            }
 
-        <div class="gradient-border rounded-xl overflow-hidden">
-          <div class="bg-white/60 backdrop-blur-md border border-slate-200/70">
-            <div class="text-xs text-slate-400 font-mono">Next Sync</div>
-            <div id="countdown" class="text-sm font-black text-cyan-300 font-mono">300s</div>
-          </div>
-        </div>
-      </div>
-    </div>
+            // Dark Mode Status Colors
+            function getStatusStyle(status) {
+                const s = status?.toUpperCase();
+                // Emerald/Teal for Good, Amber for Maintenance, Rose/Red for AOG/Error
+                if (s === 'SERVICEABLE') return { 
+                    bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30', dot: 'bg-emerald-500', 
+                    glow: 'shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]' 
+                };
+                if (s === 'MRO') return { 
+                    bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30', dot: 'bg-amber-500',
+                    glow: 'shadow-[0_0_15px_-3px_rgba(245,158,11,0.3)]'
+                };
+                if (s === 'AOG') return { 
+                    bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/30', dot: 'bg-rose-500',
+                    glow: 'shadow-[0_0_15px_-3px_rgba(244,63,94,0.3)]'
+                };
+                return { 
+                    bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/30', dot: 'bg-slate-500',
+                    glow: ''
+                };
+            }
 
-    <!-- ERROR BANNER -->
-    <div id="errorBanner" class="hidden mb-6 p-4 rounded-xl bg-rose-500/10 border-l-4 border-rose-500 text-slate-200">
-      <div class="font-bold">Data Error</div>
-      <div id="errorMsg" class="text-sm text-rose-200 mt-1"></div>
-    </div>
+            function getAlertStatus(ac, isCritical) {
+                const remarksClean = ac.remarks ? ac.remarks.trim() : '';
+                const isServiceable = ac.status?.toUpperCase() === 'SERVICEABLE';
+                
+                if (isCritical) {
+                    return { 
+                        type: 'CRITICAL', 
+                        content: <span className="flex items-center gap-1.5 text-rose-400 font-bold animate-pulse text-sm">
+                            <Icons.Alert /> EXPIRED/DUE
+                        </span> 
+                    };
+                }
+                
+                if (isServiceable && (!remarksClean || remarksClean.toUpperCase() === 'NORMAL')) {
+                    return { 
+                        type: 'READY', 
+                        content: <span className="flex items-center gap-1.5 text-emerald-400 font-bold tracking-wide text-xs border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 rounded">
+                            <Icons.Check /> FLIGHT READY
+                        </span> 
+                    };
+                }
 
-    <!-- CONTENT -->
-    <div id="content"></div>
+                return { 
+                    type: 'INFO', 
+                    content: <span className="text-slate-400 font-medium text-xs truncate max-w-[150px] block" title={remarksClean}>{remarksClean || '-'}</span> 
+                };
+            }
 
-    <!-- FOOTER -->
-    <div class="mt-10 mb-10 text-center text-xs text-slate-500 font-mono">
-      Fleet Command (Vanilla JS build) • Data Source: Google Sheets CSV • Auto-refresh: 300s
-    </div>
-  </div>
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-slate-900">
+                        <div className="text-center relative">
+                            <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full"></div>
+                            <div className="text-white text-6xl mb-8 float relative z-10"><Icons.PlaneFill /></div>
+                            <div className="text-blue-400 font-mono text-sm uppercase tracking-[0.4em] animate-pulse">Establishing Datalink</div>
+                        </div>
+                    </div>
+                );
+            }
 
-<script>
-  // ===== Config from original file requirements [Source](https://www.genspark.ai/api/files/s/IRVVsDaT)
-  const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=0&single=true&output=csv';
-  const REFRESH_SECONDS = 300;
-  const SHOW_HOURS_THRESHOLD = 24;
+            const filteredAircraft = filterStatus === 'ALL' ? aircraft : aircraft.filter(ac => ac.status?.toUpperCase() === filterStatus);
 
-  const STATUS_CONFIG = {
-    ALL: { label: 'All Fleet', dotClass: 'status-default', border: 'border-blue-500/40', bg: 'bg-blue-500/20', text: 'text-blue-300' },
-    SERVICEABLE: { label: 'Serviceable', color: 'var(--status-serviceable)', bgCard: 'bg-[#0f2922]/50', borderCard: 'border-[#10b981]/30', text: 'text-emerald-300', dotClass: 'status-serviceable' },
-    MRO: { label: 'Under Maintenance', color: 'var(--status-mro)', bgCard: 'bg-[#2c1e0a]/50', borderCard: 'border-[#f59e0b]/30', text: 'text-amber-300', dotClass: 'status-mro' },
-    AOG: { label: 'Aircraft on Ground', color: 'var(--status-aog)', bgCard: 'bg-[#2a0a0f]/50', borderCard: 'border-[#ef4444]/30', text: 'text-rose-300', dotClass: 'status-aog' },
-    DEFAULT: { label: 'Unknown Status', color: 'var(--status-default)', bgCard: 'bg-slate-900/40', borderCard: 'border-slate-700', text: 'text-slate-400', dotClass: 'status-default' }
-  };
+            const AircraftCard = ({ ac, index }) => {
+                const dailyTime = calculateTime(ac.dailyInsp);
+                const weeklyTime = calculateTime(ac.weeklyInsp);
+                const showAlerts = ac.status?.toUpperCase() !== 'AOG' && ac.status?.toUpperCase() !== 'MRO';
+                const isCritical = showAlerts && (dailyTime.hours <= 3 || weeklyTime.hours <= 3);
+                const styles = getStatusStyle(ac.status);
+                const alertStatus = getAlertStatus(ac, isCritical);
+                
+                return (
+                    <div className="glass-card rounded-xl p-5 relative overflow-hidden group flex flex-col h-full">
+                        
+                        {/* Status Stripe */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${styles.dot}`}></div>
 
-  // ===== State
-  let aircraft = [];
-  let filterStatus = 'ALL';
-  let viewMode = 'table';
-  let syncing = false;
-  let nextSync = REFRESH_SECONDS;
-  let lastSyncTime = null;
-  let systemStatus = 'initializing';
-  let dataError = null;
+                        <div className="flex justify-between items-start mb-5 pl-3">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest bg-slate-800/50 px-1.5 rounded border border-slate-700/50">
+                                        {ac.type}
+                                    </span>
+                                </div>
+                                <div className="text-3xl font-bold text-white tracking-tight font-mono group-hover:text-blue-200 transition-colors flex items-center gap-2">
+                                    {ac.registration}
+                                </div>
+                            </div>
+                            <div className={`px-3 py-1 rounded border ${styles.bg} ${styles.border} ${styles.text} ${styles.glow} flex items-center gap-2`}>
+                                <div className={`w-1.5 h-1.5 rounded-full ${styles.dot} ${ac.status === 'SERVICEABLE' ? 'radar-pulse' : ''}`}></div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest">{ac.status}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-5 pl-3">
+                            {/* Daily Check Block */}
+                            <div className="bg-slate-800/40 rounded-lg p-2.5 border border-slate-700/50 hover:border-slate-600 transition-colors">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <div className="text-[10px] text-slate-500 font-bold uppercase flex items-center gap-1">
+                                        <Icons.Calendar /> DAILY
+                                    </div>
+                                </div>
+                                <div className="text-sm font-mono font-bold text-slate-200">{ac.dailyInsp || '--:--'}</div>
+                                {dailyTime.hours <= SHOW_HOURS_THRESHOLD && !dailyTime.overdue && dailyTime.hours !== 999 && (
+                                    <div className="text-[10px] font-bold text-amber-500 mt-1 flex items-center gap-1 bg-amber-500/10 px-1.5 py-0.5 rounded w-fit">
+                                        <Icons.Clock /> {dailyTime.hours}H REMAINING
+                                    </div>
+                                )}
+                            </div>
 
-  // ===== DOM
-  const sysdot = document.getElementById('sysdot');
-  const sysmsg = document.getElementById('sysmsg');
-  const lastsync = document.getElementById('lastsync');
-  const utcClock = document.getElementById('utcClock');
-  const statusFilters = document.getElementById('statusFilters');
-  
-  const btnTable = document.getElementById('btnTable');
-  const btnSync = document.getElementById('btnSync');
-  const countdown = document.getElementById('countdown');
-  const content = document.getElementById('content');
-  const errorBanner = document.getElementById('errorBanner');
-  const errorMsg = document.getElementById('errorMsg');
+                            {/* Weekly Check Block */}
+                            <div className="bg-slate-800/40 rounded-lg p-2.5 border border-slate-700/50 hover:border-slate-600 transition-colors">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <div className="text-[10px] text-slate-500 font-bold uppercase flex items-center gap-1">
+                                        <Icons.Wrench /> WEEKLY
+                                    </div>
+                                </div>
+                                <div className="text-sm font-mono font-bold text-slate-200">{ac.weeklyInsp || '--:--'}</div>
+                                {weeklyTime.hours <= SHOW_HOURS_THRESHOLD && !weeklyTime.overdue && weeklyTime.hours !== 999 && (
+                                    <div className="text-[10px] font-bold text-amber-500 mt-1 flex items-center gap-1 bg-amber-500/10 px-1.5 py-0.5 rounded w-fit">
+                                        <Icons.Clock /> {weeklyTime.hours}H REMAINING
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
-  function setSystem(status, message) {
-    systemStatus = status;
-    sysmsg.textContent = message;
+                        <div className="mt-auto pl-3 pt-4 border-t border-slate-700/50">
+                            <div className="flex justify-between items-end">
+                                <div>
+                                    <div className="text-[10px] text-slate-500 font-bold uppercase mb-1 flex items-center gap-1">
+                                        <Icons.Turbine /> MEL / Tech Log
+                                    </div>
+                                    {ac.mel && ac.mel.trim() ? (
+                                        <span className="text-rose-400 font-mono font-bold text-xs bg-rose-500/10 px-2 py-1 rounded border border-rose-500/30 inline-block">{ac.mel}</span>
+                                    ) : (
+                                        <span className="text-slate-600 text-xs font-mono">NO OPEN ITEMS</span>
+                                    )}
+                                </div>
+                                <div className="text-right">
+                                    {alertStatus.content}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
 
-    sysdot.className = 'w-2 h-2 rounded-full ' + (
-      status === 'operational' ? 'bg-emerald-500 animate-pulse' :
-      status === 'syncing' ? 'bg-blue-500 animate-pulse' :
-      status === 'error' ? 'bg-rose-500' : 'bg-amber-500'
-    );
-  }
+            return (
+                <div className="p-4 lg:p-8 font-sans flex flex-col pb-20 max-w-[1600px] mx-auto w-full">
+                        
+                    {/* HEADER */}
+                    <div className="glass-panel rounded-2xl p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+                        {/* Decorative background glow */}
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+                        
+                        <div className="flex items-center gap-6 z-10 w-full md:w-auto">
+                            <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-900/50 border border-blue-400/30">
+                                <Icons.PlaneFill />
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                                    FLEET COMMAND
+                                    <span className="text-[10px] font-mono border border-blue-500/50 text-blue-400 px-1.5 py-0.5 rounded bg-blue-900/30">v2.1</span>
+                                </h1>
+                                <p className="text-slate-400 font-medium text-xs uppercase tracking-widest flex items-center gap-2 mt-1">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></span>
+                                    Live Operations Network
+                                </p>
+                            </div>
+                        </div>
 
-  function setError(errText) {
-    dataError = errText || null;
-    if (dataError) {
-      errorBanner.classList.remove('hidden');
-      errorMsg.textContent = dataError;
-      setSystem('error', `DATA ERROR: ${dataError.substring(0, 42)}`);
-    } else {
-      errorBanner.classList.add('hidden');
-      errorMsg.textContent = '';
-    }
-  }
+                        {/* Top Stats/Time */}
+                        <div className="flex items-center gap-8 z-10 w-full md:w-auto justify-between md:justify-end">
+                            <div className="hidden lg:block text-right border-r border-slate-700 pr-8">
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Fleet Status</div>
+                                <div className="text-white font-bold flex gap-3">
+                                    <span className="text-emerald-400">{aircraft.filter(a => a.status === 'SERVICEABLE').length} Ready</span>
+                                    <span className="text-rose-400">{aircraft.filter(a => a.status === 'AOG').length} AOG</span>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 flex items-center justify-end gap-1">
+                                    <Icons.Radar /> ZULU TIME
+                                </div>
+                                <div className="font-mono text-2xl font-bold text-blue-100 tabular-nums tracking-widest text-shadow-glow">
+                                    {currentTime.getUTCHours().toString().padStart(2, '0')}:
+                                    {currentTime.getUTCMinutes().toString().padStart(2, '0')}:
+                                    {currentTime.getUTCSeconds().toString().padStart(2, '0')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-  function updateLastSync() {
-    if (!lastSyncTime) {
-      lastsync.textContent = 'Awaiting first sync...';
-      return;
-    }
-    lastsync.textContent = `Last Updated: ${lastSyncTime.toLocaleTimeString('en-GB', {
-      hour: '2-digit', minute: '2-digit', hour12: false
-    })} UTC`;
-  }
+                    {/* CONTROLS BAR */}
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        
+                        {/* Filter Tabs */}
+                        <div className="glass-panel p-1 rounded-lg flex gap-1 overflow-x-auto max-w-full w-full md:w-auto">
+                            {['ALL', 'SERVICEABLE', 'MRO', 'AOG'].map(status => (
+                                <button 
+                                    key={status}
+                                    onClick={() => setFilterStatus(status)} 
+                                    className={`px-5 py-2 rounded-md text-xs font-bold transition-all whitespace-nowrap uppercase tracking-wider flex-1 md:flex-none ${
+                                        filterStatus === status 
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
+                                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                    }`}
+                                >
+                                    {status === 'ALL' ? 'Total Fleet' : status}
+                                </button>
+                            ))}
+                        </div>
 
-  function pad2(n){ return String(n).padStart(2,'0'); }
+                        {/* View Toggle & Sync */}
+                        <div className="flex gap-3 w-full md:w-auto justify-end">
+                            <div className="glass-panel p-1 rounded-lg flex">
+                                <button onClick={() => setViewMode('table')} className={`p-2 rounded transition-all ${viewMode === 'table' ? 'bg-slate-700 text-blue-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}>
+                                    <Icons.List />
+                                </button>
+                                <button onClick={() => setViewMode('grid')} className={`p-2 rounded transition-all ${viewMode === 'grid' ? 'bg-slate-700 text-blue-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}>
+                                    <Icons.Grid />
+                                </button>
+                            </div>
+                            <button
+                                onClick={syncFromGoogleSheet}
+                                disabled={syncing}
+                                className="glass-panel px-4 py-2 rounded-lg text-xs font-bold text-blue-300 flex items-center gap-2 hover:bg-slate-800 transition-all border border-blue-500/20 hover:border-blue-400/50 active:scale-95 uppercase tracking-wide"
+                            >
+                                <span className={syncing ? 'animate-spin' : ''}><Icons.Sync /></span>
+                                {syncing ? 'UPLINKING...' : `REFRESH (${Math.floor(nextSync / 60)}:${String(nextSync % 60).padStart(2, '0')})`}
+                            </button>
+                        </div>
+                    </div>
 
-  function tickClock() {
-    const now = new Date();
-    utcClock.textContent = `${pad2(now.getUTCHours())}:${pad2(now.getUTCMinutes())}:${pad2(now.getUTCSeconds())}`;
-  }
+                    {/* GRID VIEW */}
+                    {viewMode === 'grid' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {filteredAircraft.map((ac, i) => (
+                                <AircraftCard key={i} ac={ac} index={i} />
+                            ))}
+                        </div>
+                    )}
 
-  // Keep your original time logic concept (remaining vs overdue) [Source](https://www.genspark.ai/api/files/s/IRVVsDaT)
-  function calculateTime(dateStr) {
-    if (!dateStr || !dateStr.trim()) return { hours: 999, overdue: false, display: '' };
-    try {
-      const cleanStr = dateStr.replace(/\s+/g,' ').trim();
-      const parts = cleanStr.split(' ');
-      if (parts.length < 2) return { hours: 999, overdue: false, display: dateStr };
+                    {/* TABLE VIEW */}
+                    {viewMode === 'table' && (
+                        <div className="glass-panel rounded-xl shadow-xl overflow-hidden border border-slate-700/50">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-800/80 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-700">
+                                            <th className="px-6 py-4 w-16">#</th>
+                                            <th className="px-6 py-4">Registration</th>
+                                            <th className="px-6 py-4 text-center">Status</th>
+                                            <th className="px-6 py-4">Daily Check</th>
+                                            <th className="px-6 py-4">Weekly Check</th>
+                                            <th className="px-6 py-4">MEL / Tech Log</th>
+                                            <th className="px-6 py-4 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-700/50 bg-slate-900/30">
+                                        {filteredAircraft.map((ac, i) => {
+                                            const dailyTime = calculateTime(ac.dailyInsp);
+                                            const weeklyTime = calculateTime(ac.weeklyInsp);
+                                            const showAlerts = ac.status?.toUpperCase() !== 'AOG' && ac.status?.toUpperCase() !== 'MRO';
+                                            const isCritical = showAlerts && (dailyTime.hours <= 3 || weeklyTime.hours <= 3);
+                                            const styles = getStatusStyle(ac.status);
+                                            const alertStatus = getAlertStatus(ac, isCritical);
 
-      const datePart = parts[0].split('/');
-      const timePart = parts[1].split(':');
-      if (datePart.length < 3 || timePart.length < 2) return { hours: 999, overdue: false, display: dateStr };
+                                            return (
+                                                <tr key={i} className="hover:bg-white/5 transition-colors group">
+                                                    <td className="px-6 py-4 text-sm font-mono text-slate-600">{ac.slNo}</td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-lg font-bold text-white font-mono tracking-tight">{ac.registration}</div>
+                                                        <div className="text-[10px] text-slate-500 font-bold uppercase">{ac.type}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest ${styles.bg} ${styles.text} border ${styles.border} ${styles.glow}`}>
+                                                            <span className={`w-1.5 h-1.5 rounded-full ${styles.dot}`}></span>
+                                                            {ac.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm font-mono font-medium text-slate-300">{ac.dailyInsp}</div>
+                                                        {dailyTime.hours <= SHOW_HOURS_THRESHOLD && !dailyTime.overdue && dailyTime.hours !== 999 && (
+                                                            <div className="text-[10px] font-bold text-amber-500 mt-0.5 flex items-center gap-1">
+                                                                <Icons.Clock /> {dailyTime.hours}h
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm font-mono font-medium text-slate-300">{ac.weeklyInsp}</div>
+                                                        {weeklyTime.hours <= SHOW_HOURS_THRESHOLD && !weeklyTime.overdue && weeklyTime.hours !== 999 && (
+                                                            <div className="text-[10px] font-bold text-amber-500 mt-0.5 flex items-center gap-1">
+                                                                <Icons.Clock /> {weeklyTime.hours}h
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {ac.status === 'MRO' ? (
+                                                            <span className="text-amber-500/50 text-xs font-bold italic flex items-center gap-1"><Icons.Wrench /> In Maintenance</span>
+                                                        ) : ac.mel && ac.mel.trim() ? (
+                                                            <span className="text-rose-400 font-mono font-bold text-xs bg-rose-500/10 px-2 py-1 rounded border border-rose-500/30">{ac.mel}</span>
+                                                        ) : (
+                                                            <span className="text-slate-600 font-bold text-[10px] uppercase">Nil Defects</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        {alertStatus.content}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="px-6 py-3 bg-slate-800/50 border-t border-slate-700 flex justify-between items-center">
+                                <div className="text-[10px] font-bold text-slate-500 uppercase">Monitoring {filteredAircraft.length} Aircraft</div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
 
-      const due = new Date(Date.UTC(
-        parseInt(datePart[2],10),
-        parseInt(datePart[1],10) - 1,
-        parseInt(datePart[0],10),
-        parseInt(timePart[0],10),
-        parseInt(timePart[1],10)
-      ));
-
-      const now = new Date();
-      const diffMs = due - now;
-      const totalHours = diffMs / 3600000;
-      const hours = Math.floor(totalHours);
-      const minutes = Math.floor((totalHours - hours) * 60);
-
-      if (diffMs < 0) {
-        const overdueHours = Math.abs(hours);
-        return { hours: -overdueHours, overdue: true, display: `OVERDUE ${overdueHours}h ${Math.abs(minutes)}m` };
-      }
-      return { hours, overdue: false, display: `${hours}h ${minutes}m remaining` };
-    } catch (e) {
-      return { hours: 999, overdue: false, display: dateStr };
-    }
-  }
-
-  function getAlertType(ac) {
-    const daily = calculateTime(ac.dailyInsp);
-    const weekly = calculateTime(ac.weeklyInsp);
-    const isCritical = (daily.hours <= 3 && !daily.overdue) || (weekly.hours <= 3 && !weekly.overdue);
-
-    if (daily.overdue || weekly.overdue) return { kind: 'CRITICAL', label: 'INSPECTION OVERDUE' };
-    if (isCritical) return { kind: 'WARNING', label: 'DUE SOON' };
-
-    const statusKey = (ac.status || 'DEFAULT').toUpperCase();
-    const remarks = (ac.remarks || '').trim();
-    if (statusKey === 'SERVICEABLE' && (!remarks || remarks.toUpperCase() === 'NORMAL')) {
-      return { kind: 'READY', label: 'Ready for Dispatch' };
-    }
-    if (remarks) return { kind: 'INFO', label: remarks };
-    return { kind: 'DEFAULT', label: 'No alerts' };
-  }
-
-  // Basic CSV parser (still simple; avoids React dependency)
-  // Note: Still won’t fully support quoted commas; can be enhanced if needed.
-  function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    if (lines.length < 2) throw new Error('Invalid data format');
-
-    return lines.slice(1).map(line => {
-      const cols = line.split(',').map(c => c.trim().replace(/"/g,''));
-      return {
-        slNo: parseInt(cols[0],10) || 0,
-        registration: cols[1] || 'UNKNOWN',
-        type: cols[2] || 'N/A',
-        status: (cols[3] || 'DEFAULT').toUpperCase(),
-        dailyInsp: cols[4] || '',
-        weeklyInsp: cols[5] || '',
-        mel: cols[6] || '',
-        remarks: cols[7] || ''
-      };
-    }).filter(r => r.registration !== 'UNKNOWN' && r.slNo > 0);
-  }
-
-  function filteredList() {
-    if (filterStatus === 'ALL') return aircraft;
-    return aircraft.filter(a => (a.status || '').toUpperCase() === filterStatus);
-  }
-
-  function buildFilters() {
-    const statuses = ['ALL','SERVICEABLE','MRO','AOG'];
-    statusFilters.innerHTML = '';
-    statuses.forEach(st => {
-      const isActive = (filterStatus === st);
-      const cfg = STATUS_CONFIG[st] || STATUS_CONFIG.DEFAULT;
-
-      const btn = document.createElement('button');
-      btn.className =
-        `px-4 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap relative overflow-hidden ` +
-        (isActive
-          ? `${cfg.bg || 'bg-blue-500/20'} ${cfg.text || 'text-blue-300'} border ${cfg.border || 'border-blue-500/40'} shadow-lg shadow-blue-500/20`
-          : `text-slate-700 hover:text-white hover:bg-slate-800/70`);
-      btn.textContent = cfg.label || st;
-      btn.onclick = () => { filterStatus = st; buildFilters(); render(); };
-      statusFilters.appendChild(btn);
-    });
-  }
-
- 
-
-  function melChips(mel) {
-    const clean = (mel || '').trim();
-    if (!clean) {
-      return `<span class="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20 text-xs">NIL</span>`;
-    }
-    return clean.split(';').map(item => `
-      <span class="text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/20 text-xs">
-        ${escapeHtml(item.trim())}
-      </span>
-    `).join('');
-  }
-
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll('&','&amp;')
-      .replaceAll('<','&lt;')
-      .replaceAll('>','&gt;')
-      .replaceAll('"','&quot;')
-      .replaceAll("'","&#039;");
-  }
-
- 
-
-    const alertHTML = (() => {
-      if (alert.kind === 'CRITICAL') return `<span class="flex items-center gap-1.5 text-rose-400 font-bold text-sm">⚠ ${escapeHtml(alert.label)}</span>`;
-      if (alert.kind === 'WARNING') return `<span class="flex items-center gap-1.5 text-amber-400 font-bold text-sm">⚠ ${escapeHtml(alert.label)}</span>`;
-      if (alert.kind === 'READY') return `<span class="flex items-center gap-1.5 text-emerald-400 font-bold text-sm">✓ ${escapeHtml(alert.label)}</span>`;
-      if (alert.kind === 'INFO') return `<span class="text-slate-700 font-medium text-sm max-w-[200px] truncate" title="${escapeHtml(alert.label)}">${escapeHtml(alert.label)}</span>`;
-      return `<span class="text-slate-500 text-sm">No alerts</span>`;
-    })();
-
-    const dueLine = (t) => {
-      if (t.hours === 999) return '';
-      if (t.overdue) return `<div class="text-xs font-bold mt-1 flex items-center gap-1.5 text-rose-400">⚠ ${escapeHtml(t.display)}</div>`;
-      if (t.hours <= SHOW_HOURS_THRESHOLD) {
-        const cls = (t.hours <= 3) ? 'text-amber-400' : 'text-cyan-300';
-        return `<div class="text-xs font-bold mt-1 flex items-center gap-1.5 ${cls}">⏱ ${escapeHtml(t.display)}</div>`;
-      }
-      return '';
-    };
-
-    return `
-      <div class="card-glow ${cfg.bgCard || 'bg-slate-900/40'} ${cfg.borderCard || 'border-slate-700'} rounded-2xl p-6 backdrop-blur-xl transition-all duration-500 hover:border-blue-500/50 group relative overflow-hidden"
-           style="--status-color:${cfg.color || 'var(--status-default)'}">
-        <div class="status-bar"></div>
-        <div class="card-content">
-          <div class="flex justify-between items-start mb-5">
-            <div>
-              <div class="text-xs text-blue-200 font-bold uppercase tracking-wider mb-1.5">Aircraft ID</div>
-              <div class="text-3xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-cyan-300 tracking-tight">
-                ${escapeHtml(ac.registration)}
-              </div>
-              <div class="text-sm text-slate-700 mt-1 font-medium">${escapeHtml(ac.type)}</div>
-            </div>
-            <div class="px-3.5 py-1.5 rounded-xl border ${cfg.borderCard || 'border-slate-700'} flex items-center gap-2">
-              <span class="status-dot ${cfg.dotClass || 'status-default'}"></span>
-              <span class="font-bold text-sm ${cfg.text || 'text-slate-700'} tracking-wide">${escapeHtml(cfg.label)}</span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3 mb-5">
-            <div class="bg-slate-900/40 rounded-xl p-3.5 border border-slate-800/70 hover:border-blue-500/30 transition-colors">
-              <div class="text-xs text-blue-200 font-bold uppercase mb-1.5">Daily Inspection</div>
-              <div class="text-lg font-bold font-mono text-slate-200">${escapeHtml(ac.dailyInsp || '')}</div>
-              ${dueLine(daily)}
-            </div>
-
-            <div class="bg-slate-900/40 rounded-xl p-3.5 border border-slate-800/70 hover:border-blue-500/30 transition-colors">
-              <div class="text-xs text-blue-200 font-bold uppercase mb-1.5">Weekly Inspection</div>
-              <div class="text-lg font-bold font-mono text-slate-200">${escapeHtml(ac.weeklyInsp || '')}</div>
-              ${dueLine(weekly)}
-            </div>
-          </div>
-
-          <div class="border-t border-slate-800/50 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div class="flex-1">
-              <div class="text-xs text-blue-200 font-bold uppercase mb-1.5">MEL Items</div>
-              <div class="flex flex-wrap gap-1.5">${melChips(ac.mel)}</div>
-            </div>
-            <div class="flex-1 min-w-[200px]">
-              <div class="text-xs text-blue-200 font-bold uppercase mb-1.5">Operational Status</div>
-              <div class="text-sm font-medium min-h-[24px]">${alertHTML}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function tableHTML(list) {
-    const rows = list.map(ac => {
-      const statusKey = (ac.status || 'DEFAULT').toUpperCase();
-      const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.DEFAULT;
-      const daily = calculateTime(ac.dailyInsp);
-      const weekly = calculateTime(ac.weeklyInsp);
-
-      const timeCell = (t) => {
-        if (t.hours === 999) return '';
-        if (t.overdue) return `<span class="text-rose-400 font-bold">${escapeHtml(t.display)}</span>`;
-        if (t.hours <= 3) return `<span class="text-amber-400 font-bold">${escapeHtml(t.display)}</span>`;
-        if (t.hours <= SHOW_HOURS_THRESHOLD) return `<span class="text-cyan-300 font-bold">${escapeHtml(t.display)}</span>`;
-        return '';
-      };
-
-      return `
-        <tr class="border-b border-slate-800/60 hover:bg-slate-900/40">
-          <td class="py-3 px-3 text-slate-400 font-mono">${ac.slNo}</td>
-          <td class="py-3 px-3 font-black text-slate-100">${escapeHtml(ac.registration)}</td>
-          <td class="py-3 px-3 text-slate-700">${escapeHtml(ac.type)}</td>
-          <td class="py-3 px-3">
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-xl border ${cfg.borderCard || 'border-slate-700'} ${cfg.text || 'text-slate-700'}">
-              <span class="status-dot ${cfg.dotClass || 'status-default'}"></span>
-              <span class="font-bold text-sm">${escapeHtml(cfg.label)}</span>
-            </span>
-          </td>
-          <td class="py-3 px-3 font-mono text-slate-200">${escapeHtml(ac.dailyInsp || '')}<div class="text-xs mt-1">${timeCell(daily)}</div></td>
-          <td class="py-3 px-3 font-mono text-slate-200">${escapeHtml(ac.weeklyInsp || '')}<div class="text-xs mt-1">${timeCell(weekly)}</div></td>
-          <td class="py-3 px-3">${melChips(ac.mel)}</td>
-          <td class="py-3 px-3 text-slate-700 max-w-[360px] truncate" title="${escapeHtml(ac.remarks || '')}">${escapeHtml(ac.remarks || '')}</td>
-        </tr>
-      `;
-    }).join('');
-
-    return `
-      <div class="mobile-scroll">
-        <table class="min-w-table w-full text-left border-collapse rounded-2xl overflow-hidden">
-          <thead class="table-header-sticky">
-            <tr class="text-xs text-blue-200 uppercase tracking-widest">
-              <th class="py-3 px-3">Sl</th>
-              <th class="py-3 px-3">Registration</th>
-              <th class="py-3 px-3">Type</th>
-              <th class="py-3 px-3">Status</th>
-              <th class="py-3 px-3">Daily Insp</th>
-              <th class="py-3 px-3">Weekly Insp</th>
-              <th class="py-3 px-3">MEL</th>
-              <th class="py-3 px-3">Remarks</th>
-            </tr>
-          </thead>
-          <tbody class="bg-slate-950/40">
-            ${rows || `<tr><td class="py-6 px-3 text-slate-400" colspan="8">No aircraft in this view.</td></tr>`}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  function render() {
-    const list = filteredList();
-      content.innerHTML = tableHTML(list);
-    countdown.textContent = `${nextSync}s`;
-  }
-
-  async function syncNow() {
-    if (syncing) return;
-    syncing = true;
-    btnSync.disabled = true;
-    btnSync.classList.add('opacity-60', 'cursor-not-allowed');
-
-    setSystem('syncing', 'SYNCHRONIZING DATA...');
-    setError(null);
-
-    try {
-      const csvText = await window.fetchGoogleSheet(SHEET_URL);
-      const parsed = parseCSV(csvText);
-      if (!parsed.length) throw new Error('No valid aircraft data found');
-
-      aircraft = parsed;
-      lastSyncTime = new Date();
-      updateLastSync();
-      setSystem('operational', 'ALL SYSTEMS OPERATIONAL');
-    } catch (e) {
-      console.error(e);
-      setError(e.message || 'Data source unavailable');
-
-      // Fallback: keep existing list; if none, inject demo minimal
-      if (!aircraft.length) {
-        aircraft = [
-          {slNo:1,registration:"VT-DEMO",type:"A320",status:"SERVICEABLE",dailyInsp:"25/01/2026 14:30",weeklyInsp:"01/02/2026 09:00",mel:"",remarks:"Demo Mode"},
-          {slNo:2,registration:"VT-TEST",type:"B737",status:"MRO",dailyInsp:"20/01/2026 10:00",weeklyInsp:"28/01/2026 16:00",mel:"Hydraulic leak",remarks:"Under maintenance"},
-          {slNo:3,registration:"VT-FAULT",type:"A321",status:"AOG",dailyInsp:"18/01/2026 08:00",weeklyInsp:"25/01/2026 11:00",mel:"Engine fault",remarks:"Critical repair"}
-        ];
-      }
-    } finally {
-      syncing = false;
-      btnSync.disabled = false;
-      btnSync.classList.remove('opacity-60', 'cursor-not-allowed');
-      render();
-    }
-  }
-
-  // ===== Wire up UI
- 
-  btnTable.addEventListener('click', () => setView('table'));
-  btnSync.addEventListener('click', async () => {
-    nextSync = REFRESH_SECONDS;
-    await syncNow();
-  });
-
-  // ===== Init
-  buildFilters();
-  tickClock();
-  setSystem('initializing', 'SYSTEM INITIALIZING');
-  render();
-  syncNow();
-
-  // ===== Timers
-  setInterval(tickClock, 1000);
-
-  setInterval(() => {
-    nextSync -= 1;
-    if (nextSync <= 0) {
-      nextSync = REFRESH_SECONDS;
-      syncNow();
-    } else {
-      // re-render only for countdown + time remaining display update
-      render();
-    }
-  }, 1000);
-</script>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+    </script>
 </body>
 </html>
