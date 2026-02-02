@@ -19,7 +19,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    :root {
+ :root { --topbar-h: 40px; }
+@media (max-width: 768px) { :root { --topbar-h: 56px; } }
+ {
       --status-serviceable: #10b981;
       --status-mro: #f59e0b;
       --status-aog: #ef4444;
@@ -37,19 +39,21 @@
     }
     ::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.6); }
 
-    body{
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: #0a0f1d;
-      background-image:
-        radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 25%),
-        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 25%),
-        linear-gradient(to bottom, #0a0f1d 0%, #070b16 100%);
-      color: #e2e8f0;
-      overflow-x: hidden;
-      background-attachment: fixed;
-      margin: 0;
-      padding-top: 2.5rem;
-    }
+body{
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #0f172a;
+  overflow-x: hidden;
+  margin: 0;
+  padding-top: 2.5rem;
+
+  background:
+    radial-gradient(circle at 10% 15%, rgba(56, 189, 248, 0.35) 0%, transparent 40%),
+    radial-gradient(circle at 90% 20%, rgba(99, 102, 241, 0.22) 0%, transparent 42%),
+    radial-gradient(circle at 80% 85%, rgba(16, 185, 129, 0.18) 0%, transparent 45%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2ff 55%, #f1f5f9 100%);
+  background-attachment: fixed;
+}
+
 
     .gradient-border{ position:relative; border-radius:inherit; }
     .gradient-border::before{
@@ -115,8 +119,10 @@
     }
 
     @media (max-width: 768px){
-      body{ padding-top: 3.5rem; }
-      .table-header-sticky{ top: 3.5rem; }
+      body { padding-top: var(--topbar-h); }
+
+.table-header-sticky { top: var(--topbar-h); }
+
       .mobile-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
       .min-w-table{ min-width: 900px; }
     }
@@ -157,7 +163,7 @@
       <div class="flex items-center justify-between h-10">
         <div class="flex items-center gap-2">
           <div id="sysdot" class="w-2 h-2 rounded-full bg-amber-500"></div>
-          <span id="sysmsg" class="text-xs font-mono font-bold tracking-wider text-slate-300">SYSTEM INITIALIZING</span>
+          <span id="sysmsg" class="text-xs font-mono font-bold tracking-wider text-slate-700">SYSTEM INITIALIZING</span>
         </div>
         <div id="lastsync" class="text-xs font-mono text-slate-400">Awaiting first sync...</div>
       </div>
@@ -166,7 +172,7 @@
 
   <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
     <!-- HEADER -->
-    <div class="pt-14 pb-8">
+    <div class="pt-9 pb-3">
       <div class="gradient-border rounded-3xl overflow-hidden">
         <div class="bg-gradient-to-br from-slate-950 to-slate-900 p-6 md:p-8 relative overflow-hidden">
           <div class="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -mr-24 -mt-24"></div>
@@ -181,7 +187,7 @@
                 <h1 class="text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-cyan-300 tracking-tight">
                   FLEET COMMAND
                 </h1>
-                <p class="text-slate-300 font-medium text-base mt-1 flex items-center gap-2.5">
+                <p class="text-slate-700 font-medium text-base mt-1 flex items-center gap-2.5">
                   <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   Real-Time Aircraft Status & Maintenance Dashboard
                 </p>
@@ -203,18 +209,14 @@
     <!-- CONTROLS -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-7">
       <div class="gradient-border rounded-xl overflow-hidden">
-        <div class="bg-slate-900/50 backdrop-blur-sm p-1.5 flex flex-wrap gap-1.5" id="statusFilters">
+        <div class="bg-white/60 backdrop-blur-md border border-slate-200/70"
+>
           <!-- buttons injected -->
         </div>
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
-        <div class="gradient-border rounded-lg overflow-hidden">
-          <div class="bg-slate-900/50 backdrop-blur-sm p-1 flex">
-            <button id="btnGrid" class="p-2.5 rounded-md bg-blue-500/20 text-cyan-300 shadow-lg shadow-blue-500/20" title="Grid View">▦</button>
-            <button id="btnTable" class="p-2.5 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800/70" title="Table View">≡</button>
-          </div>
-        </div>
+     
 
         <button id="btnSync"
           class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-500/20 text-blue-200 border border-blue-500/40 hover:bg-blue-500/30 transition">
@@ -222,7 +224,7 @@
         </button>
 
         <div class="gradient-border rounded-xl overflow-hidden">
-          <div class="bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 flex items-center gap-3">
+          <div class="bg-white/60 backdrop-blur-md border border-slate-200/70">
             <div class="text-xs text-slate-400 font-mono">Next Sync</div>
             <div id="countdown" class="text-sm font-black text-cyan-300 font-mono">300s</div>
           </div>
@@ -262,7 +264,7 @@
   // ===== State
   let aircraft = [];
   let filterStatus = 'ALL';
-  let viewMode = 'grid';
+  let viewMode = 'table';
   let syncing = false;
   let nextSync = REFRESH_SECONDS;
   let lastSyncTime = null;
@@ -275,7 +277,7 @@
   const lastsync = document.getElementById('lastsync');
   const utcClock = document.getElementById('utcClock');
   const statusFilters = document.getElementById('statusFilters');
-  const btnGrid = document.getElementById('btnGrid');
+  
   const btnTable = document.getElementById('btnTable');
   const btnSync = document.getElementById('btnSync');
   const countdown = document.getElementById('countdown');
@@ -414,24 +416,14 @@
         `px-4 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap relative overflow-hidden ` +
         (isActive
           ? `${cfg.bg || 'bg-blue-500/20'} ${cfg.text || 'text-blue-300'} border ${cfg.border || 'border-blue-500/40'} shadow-lg shadow-blue-500/20`
-          : `text-slate-300 hover:text-white hover:bg-slate-800/70`);
+          : `text-slate-700 hover:text-white hover:bg-slate-800/70`);
       btn.textContent = cfg.label || st;
       btn.onclick = () => { filterStatus = st; buildFilters(); render(); };
       statusFilters.appendChild(btn);
     });
   }
 
-  function setView(mode) {
-    viewMode = mode;
-    if (mode === 'grid') {
-      btnGrid.className = "p-2.5 rounded-md bg-blue-500/20 text-cyan-300 shadow-lg shadow-blue-500/20";
-      btnTable.className = "p-2.5 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800/70";
-    } else {
-      btnTable.className = "p-2.5 rounded-md bg-blue-500/20 text-cyan-300 shadow-lg shadow-blue-500/20";
-      btnGrid.className = "p-2.5 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800/70";
-    }
-    render();
-  }
+ 
 
   function melChips(mel) {
     const clean = (mel || '').trim();
@@ -454,18 +446,13 @@
       .replaceAll("'","&#039;");
   }
 
-  function cardHTML(ac) {
-    const statusKey = (ac.status || 'DEFAULT').toUpperCase();
-    const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.DEFAULT;
-    const daily = calculateTime(ac.dailyInsp);
-    const weekly = calculateTime(ac.weeklyInsp);
-    const alert = getAlertType(ac);
+ 
 
     const alertHTML = (() => {
       if (alert.kind === 'CRITICAL') return `<span class="flex items-center gap-1.5 text-rose-400 font-bold text-sm">⚠ ${escapeHtml(alert.label)}</span>`;
       if (alert.kind === 'WARNING') return `<span class="flex items-center gap-1.5 text-amber-400 font-bold text-sm">⚠ ${escapeHtml(alert.label)}</span>`;
       if (alert.kind === 'READY') return `<span class="flex items-center gap-1.5 text-emerald-400 font-bold text-sm">✓ ${escapeHtml(alert.label)}</span>`;
-      if (alert.kind === 'INFO') return `<span class="text-slate-300 font-medium text-sm max-w-[200px] truncate" title="${escapeHtml(alert.label)}">${escapeHtml(alert.label)}</span>`;
+      if (alert.kind === 'INFO') return `<span class="text-slate-700 font-medium text-sm max-w-[200px] truncate" title="${escapeHtml(alert.label)}">${escapeHtml(alert.label)}</span>`;
       return `<span class="text-slate-500 text-sm">No alerts</span>`;
     })();
 
@@ -490,11 +477,11 @@
               <div class="text-3xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-cyan-300 tracking-tight">
                 ${escapeHtml(ac.registration)}
               </div>
-              <div class="text-sm text-slate-300 mt-1 font-medium">${escapeHtml(ac.type)}</div>
+              <div class="text-sm text-slate-700 mt-1 font-medium">${escapeHtml(ac.type)}</div>
             </div>
             <div class="px-3.5 py-1.5 rounded-xl border ${cfg.borderCard || 'border-slate-700'} flex items-center gap-2">
               <span class="status-dot ${cfg.dotClass || 'status-default'}"></span>
-              <span class="font-bold text-sm ${cfg.text || 'text-slate-300'} tracking-wide">${escapeHtml(cfg.label)}</span>
+              <span class="font-bold text-sm ${cfg.text || 'text-slate-700'} tracking-wide">${escapeHtml(cfg.label)}</span>
             </div>
           </div>
 
@@ -546,9 +533,9 @@
         <tr class="border-b border-slate-800/60 hover:bg-slate-900/40">
           <td class="py-3 px-3 text-slate-400 font-mono">${ac.slNo}</td>
           <td class="py-3 px-3 font-black text-slate-100">${escapeHtml(ac.registration)}</td>
-          <td class="py-3 px-3 text-slate-300">${escapeHtml(ac.type)}</td>
+          <td class="py-3 px-3 text-slate-700">${escapeHtml(ac.type)}</td>
           <td class="py-3 px-3">
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-xl border ${cfg.borderCard || 'border-slate-700'} ${cfg.text || 'text-slate-300'}">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-xl border ${cfg.borderCard || 'border-slate-700'} ${cfg.text || 'text-slate-700'}">
               <span class="status-dot ${cfg.dotClass || 'status-default'}"></span>
               <span class="font-bold text-sm">${escapeHtml(cfg.label)}</span>
             </span>
@@ -556,7 +543,7 @@
           <td class="py-3 px-3 font-mono text-slate-200">${escapeHtml(ac.dailyInsp || '')}<div class="text-xs mt-1">${timeCell(daily)}</div></td>
           <td class="py-3 px-3 font-mono text-slate-200">${escapeHtml(ac.weeklyInsp || '')}<div class="text-xs mt-1">${timeCell(weekly)}</div></td>
           <td class="py-3 px-3">${melChips(ac.mel)}</td>
-          <td class="py-3 px-3 text-slate-300 max-w-[360px] truncate" title="${escapeHtml(ac.remarks || '')}">${escapeHtml(ac.remarks || '')}</td>
+          <td class="py-3 px-3 text-slate-700 max-w-[360px] truncate" title="${escapeHtml(ac.remarks || '')}">${escapeHtml(ac.remarks || '')}</td>
         </tr>
       `;
     }).join('');
@@ -586,18 +573,7 @@
 
   function render() {
     const list = filteredList();
-
-    if (viewMode === 'grid') {
-      content.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-          ${list.map(cardHTML).join('') || `<div class="text-slate-400">No aircraft in this view.</div>`}
-        </div>
-      `;
-    } else {
       content.innerHTML = tableHTML(list);
-    }
-
-    // update countdown text
     countdown.textContent = `${nextSync}s`;
   }
 
@@ -640,7 +616,7 @@
   }
 
   // ===== Wire up UI
-  btnGrid.addEventListener('click', () => setView('grid'));
+ 
   btnTable.addEventListener('click', () => setView('table'));
   btnSync.addEventListener('click', async () => {
     nextSync = REFRESH_SECONDS;
