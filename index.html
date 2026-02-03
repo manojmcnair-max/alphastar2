@@ -262,23 +262,22 @@
                 submitBtn.textContent = '⏳ Saving to Sheet...';
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'text/plain;charset=utf-8', // Changed to text/plain to avoid CORS preflight issues common with Google Apps Script
                     },
                     body: JSON.stringify(data)
                 });
                 
-                // ADD THESE LINES:
-const result = await response.json();
-console.log('Response:', result);
+                const result = await response.json();
+                console.log('Response:', result);
 
-if (result.success) {
-    closeModal()
-                showAlert(`Work Order ${wo.woNumber} completed successfully! Refreshing data...`, 'success');
-                
-                // Reload data after a short delay
-                setTimeout(() => loadFromSheet(), 2000);
+                if (result.success) {
+                    closeModal(); // Added semicolon
+                    showAlert(`Work Order ${wo.woNumber} completed successfully! Refreshing data...`, 'success');
+                    
+                    // Reload data after a short delay
+                    setTimeout(() => loadFromSheet(), 2000);
+                } // <--- THIS WAS MISSING
                 
             } catch (error) {
                 console.error('Error completing work order:', error);
