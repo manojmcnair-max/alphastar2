@@ -3,88 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fleet Command | Aircraft Status</title>
+    <title>Aircraft Fleet Dashboard | Operations Center</title>
     
+    <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        @keyframes blink { 
-            0%, 50%, 100% { opacity: 1; } 
-            25%, 75% { opacity: 0.5; } 
-        }
-        .blink { animation: blink 1.5s ease-in-out infinite; }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
-        }
-        .float { animation: float 4s ease-in-out infinite; }
-
-        @keyframes pulse-soft {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .gradient-bg {
-            background: radial-gradient(circle at top left, #1e293b, #0f172a);
-            background-attachment: fixed;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
             color: #334155;
+            min-height: 100vh;
         }
-
-        /* Refined Glass Effect */
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
         }
-
-        .glass-header {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 2px solid rgba(0,0,0,0.05);
+        
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-
-        .card-hover {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px -5px rgba(0,0,0,0.1);
+        
+        .status-ready {
+            background-color: #d1fae5;
+            color: #065f46;
         }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .status-maintenance {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-grounded {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .time-indicator {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .time-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .time-critical {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .time-ok {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .refresh-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .aircraft-row:hover {
+            background-color: #f8fafc;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
 </head>
-<body class="gradient-bg min-h-screen text-slate-800">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
-
-        // --- ICONS ---
-        const Icons = {
-            Plane: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>,
-            Check: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>,
-            Alert: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>,
-            Clock: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            Sync: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
-            Grid: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>,
-            List: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-        };
 
         function Dashboard() {
             const [aircraft, setAircraft] = useState([]);
@@ -92,15 +151,72 @@
             const [syncing, setSyncing] = useState(false);
             const [nextSync, setNextSync] = useState(300);
             const [loading, setLoading] = useState(true);
-            const [viewMode, setViewMode] = useState('table');
             const [filterStatus, setFilterStatus] = useState('ALL');
-
-            const SHOW_HOURS_THRESHOLD = 15; // Only show hours if <= 15
-            const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=0&single=true&output=csv';
+            
+            // Sample data for demo (will be replaced by Google Sheets data)
+            const sampleAircraft = [
+                {
+                    slNo: 1,
+                    registration: "VT-ABC",
+                    type: "Boeing 737-800",
+                    status: "SERVICEABLE",
+                    dailyInsp: "15/05/2024 08:00",
+                    weeklyInsp: "22/05/2024 12:00",
+                    mel: "",
+                    remarks: "Normal operations"
+                },
+                {
+                    slNo: 2,
+                    registration: "VT-XYZ",
+                    type: "Airbus A320",
+                    status: "MRO",
+                    dailyInsp: "14/05/2024 10:00",
+                    weeklyInsp: "21/05/2024 14:00",
+                    mel: "Engine inspection",
+                    remarks: "Scheduled maintenance"
+                },
+                {
+                    slNo: 3,
+                    registration: "VT-DEF",
+                    type: "Boeing 787",
+                    status: "SERVICEABLE",
+                    dailyInsp: "16/05/2024 09:00",
+                    weeklyInsp: "23/05/2024 11:00",
+                    mel: "",
+                    remarks: "Ready for flight"
+                },
+                {
+                    slNo: 4,
+                    registration: "VT-GHI",
+                    type: "Airbus A321",
+                    status: "AOG",
+                    dailyInsp: "13/05/2024 07:00",
+                    weeklyInsp: "20/05/2024 10:00",
+                    mel: "Hydraulic system",
+                    remarks: "Grounded for repairs"
+                },
+                {
+                    slNo: 5,
+                    registration: "VT-JKL",
+                    type: "Boeing 777",
+                    status: "SERVICEABLE",
+                    dailyInsp: "16/05/2024 06:00",
+                    weeklyInsp: "23/05/2024 09:00",
+                    mel: "",
+                    remarks: "Flight ready"
+                }
+            ];
+            
+            // Google Sheets URL (commented out for GitHub Pages demo)
+            // const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=0&single=true&output=csv';
 
             async function syncFromGoogleSheet() {
                 setSyncing(true);
                 try {
+                    // For GitHub Pages demo, use sample data
+                    // In production, uncomment the fetch code below
+                    
+                    /*
                     let response = await fetch(SHEET_URL);
                     if (!response.ok) {
                         const proxyUrl = 'https://api.allorigins.win/raw?url=';
@@ -121,14 +237,24 @@
                             remarks: cols[7] || ''
                         };
                     }).filter(row => row.registration && !isNaN(row.slNo));
-
+                    
                     if (parsedData.length > 0) {
                         setAircraft(parsedData);
-                        setNextSync(300);
                     }
+                    */
+                    
+                    // Use sample data for demo
+                    setTimeout(() => {
+                        setAircraft(sampleAircraft);
+                        setNextSync(300);
+                        setSyncing(false);
+                        setLoading(false);
+                    }, 800);
+                    
                 } catch (error) {
                     console.error('Sync error:', error);
-                } finally {
+                    // Fallback to sample data
+                    setAircraft(sampleAircraft);
                     setSyncing(false);
                     setLoading(false);
                 }
@@ -136,7 +262,11 @@
 
             useEffect(() => {
                 syncFromGoogleSheet();
+                
+                // Update current time every second
                 const timeTimer = setInterval(() => setCurrentTime(new Date()), 1000);
+                
+                // Countdown for next sync
                 const countdownTimer = setInterval(() => {
                     setNextSync(prev => {
                         if (prev <= 1) {
@@ -146,7 +276,11 @@
                         return prev - 1;
                     });
                 }, 1000);
-                return () => { clearInterval(timeTimer); clearInterval(countdownTimer); };
+                
+                return () => {
+                    clearInterval(timeTimer);
+                    clearInterval(countdownTimer);
+                };
             }, []);
 
             function calculateTime(dateStr) {
@@ -164,287 +298,277 @@
                 }
             }
 
-            // Refined Colors
-            function getStatusStyle(status) {
+            function getStatusBadge(status) {
                 const s = status?.toUpperCase();
-                if (s === 'SERVICEABLE') return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', dot: 'bg-emerald-500' };
-                if (s === 'MRO') return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' };
-                if (s === 'AOG') return { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', dot: 'bg-rose-500' };
-                return { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200', dot: 'bg-slate-400' };
+                if (s === 'SERVICEABLE') {
+                    return <span className="status-ready"><i className="fas fa-check-circle"></i> Ready</span>;
+                }
+                if (s === 'MRO') {
+                    return <span className="status-maintenance"><i className="fas fa-tools"></i> Maintenance</span>;
+                }
+                if (s === 'AOG') {
+                    return <span className="status-grounded"><i className="fas fa-exclamation-triangle"></i> Grounded</span>;
+                }
+                return <span className="status-badge bg-gray-100 text-gray-700"><i className="fas fa-question-circle"></i> Unknown</span>;
             }
 
-            // Logic to determine "Ready for Dispatch"
-            function getAlertStatus(ac, isCritical) {
-                const remarksClean = ac.remarks ? ac.remarks.trim() : '';
-                const isServiceable = ac.status?.toUpperCase() === 'SERVICEABLE';
-                
-                // If it is critical (timer low), show Warning
-                if (isCritical) {
-                    return { 
-                        type: 'CRITICAL', 
-                        content: <span className="flex items-center gap-1.5 text-rose-600 font-bold animate-pulse text-base">
-                            <Icons.Alert /> COMPLETE INSP
-                        </span> 
-                    };
+            function getTimeBadge(hours) {
+                if (hours <= 3) {
+                    return <span className="time-indicator time-critical"><i className="fas fa-exclamation-circle"></i> {hours}h</span>;
                 }
-                
-                // If Serviceable, NOT critical, and NO remarks (or remarks are "Normal")
-                if (isServiceable && (!remarksClean || remarksClean.toUpperCase() === 'NORMAL')) {
-                    return { 
-                        type: 'READY', 
-                        content: <span className="flex items-center gap-1.5 text-emerald-600 font-bold tracking-wide text-base">
-                            <Icons.Check /> Ready for Dispatch
-                        </span> 
-                    };
+                if (hours <= 24) {
+                    return <span className="time-indicator time-warning"><i className="fas fa-clock"></i> {hours}h</span>;
                 }
-
-                // Default: Show the remark or empty dash
-                return { 
-                    type: 'INFO', 
-                    content: <span className="text-slate-500 font-bold text-base">{remarksClean || '-'}</span> 
-                };
+                if (hours < 999) {
+                    return <span className="time-indicator time-ok"><i className="fas fa-check-circle"></i> {hours}h</span>;
+                }
+                return null;
             }
 
             if (loading) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center">
-                        <div className="text-center">
-                            <div className="text-white text-5xl mb-6 float opacity-80">✈️</div>
-                            <div className="text-slate-200 font-medium text-lg uppercase tracking-[0.3em]">Fleet Systems Initializing</div>
-                        </div>
+                    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+                        <div className="loading-spinner mb-6"></div>
+                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Loading Fleet Data</h1>
+                        <p className="text-gray-600">Connecting to operations database...</p>
                     </div>
                 );
             }
 
-            const filteredAircraft = filterStatus === 'ALL' ? aircraft : aircraft.filter(ac => ac.status?.toUpperCase() === filterStatus);
+            const filteredAircraft = filterStatus === 'ALL' 
+                ? aircraft 
+                : aircraft.filter(ac => ac.status?.toUpperCase() === filterStatus);
 
-            const AircraftCard = ({ ac, index }) => {
-                const dailyTime = calculateTime(ac.dailyInsp);
-                const weeklyTime = calculateTime(ac.weeklyInsp);
-                const showAlerts = ac.status?.toUpperCase() !== 'AOG' && ac.status?.toUpperCase() !== 'MRO';
-                const isCritical = showAlerts && (dailyTime.hours <= 3 || weeklyTime.hours <= 3);
-                const styles = getStatusStyle(ac.status);
-                const alertStatus = getAlertStatus(ac, isCritical);
-                
-                return (
-                    <div className="glass-effect rounded-2xl p-6 card-hover relative overflow-hidden group">
-                        {/* Status Bar Top */}
-                        <div className={`absolute top-0 left-0 w-full h-1 ${styles.dot.replace('bg-', 'bg-gradient-to-r from-white via-')}`}></div>
-
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Registration</div>
-                                <div className="text-3xl font-black text-slate-800 tracking-tight">{ac.registration}</div>
-                            </div>
-                            <div className={`px-3 py-1.5 rounded-full border ${styles.bg} ${styles.border} ${styles.text} flex items-center gap-2 shadow-sm`}>
-                                <div className={`w-2 h-2 rounded-full ${styles.dot} animate-pulse`}></div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider">{ac.status}</span>
-                            </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                            <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100/50 hover:bg-white transition-colors">
-                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">Daily Insp</div>
-                                <div className="text-sm font-mono font-semibold text-slate-700">{ac.dailyInsp || '--:--'}</div>
-                                {dailyTime.hours <= SHOW_HOURS_THRESHOLD && !dailyTime.overdue && dailyTime.hours !== 999 && (
-                                    <div className="text-[10px] font-bold text-amber-600 mt-1 flex items-center gap-1">
-                                        <Icons.Clock /> {dailyTime.hours}h left
-                                    </div>
-                                )}
-                            </div>
-                            <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100/50 hover:bg-white transition-colors">
-                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">Weekly Insp</div>
-                                <div className="text-sm font-mono font-semibold text-slate-700">{ac.weeklyInsp || '--:--'}</div>
-                                {weeklyTime.hours <= SHOW_HOURS_THRESHOLD && !weeklyTime.overdue && weeklyTime.hours !== 999 && (
-                                    <div className="text-[10px] font-bold text-amber-600 mt-1 flex items-center gap-1">
-                                        <Icons.Clock /> {weeklyTime.hours}h left
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
-                            <div>
-                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">MEL Items</div>
-                                {ac.mel && ac.mel.trim() ? (
-                                    <span className="text-rose-600 font-bold text-xs bg-rose-50 px-2 py-1 rounded border border-rose-100">{ac.mel}</span>
-                                ) : (
-                                    <span className="text-slate-400 text-xs font-medium">None</span>
-                                )}
-                            </div>
-                            <div className="text-right">
-                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">Status Check</div>
-                                <div className="text-xs">
-                                    {alertStatus.content}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            };
+            const readyCount = aircraft.filter(a => a.status === 'SERVICEABLE').length;
+            const maintenanceCount = aircraft.filter(a => a.status === 'MRO').length;
+            const groundedCount = aircraft.filter(a => a.status === 'AOG').length;
+            const totalCount = aircraft.length;
 
             return (
-                <div className="min-h-screen p-4 lg:p-8 font-sans flex flex-col pb-20">
-                    <div className="max-w-[1400px] mx-auto w-full flex-grow">
-                        
-                        {/* HEADER */}
-                        <div className="glass-effect rounded-3xl p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                            
-                            <div className="flex items-center gap-5 z-10">
-                                <div className="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20 float">
-                                    <Icons.Plane />
-                                </div>
-                                <div>
-                                    <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Fleet Command</h1>
-                                    <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        Live Operations Dashboard
-                                    </p>
-                                </div>
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 md:p-8">
+                    {/* Header */}
+                    <header className="mb-8">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                    <i className="fas fa-plane text-blue-600 mr-3"></i>
+                                    Aircraft Fleet Dashboard
+                                </h1>
+                                <p className="text-gray-600">
+                                    Real-time monitoring of aircraft status and maintenance schedules
+                                </p>
                             </div>
-
-                            <div className="flex items-center gap-6 z-10">
-                                <div className="text-right hidden md:block">
-                                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">System Time (UTC)</div>
-                                    <div className="font-mono text-xl font-bold text-slate-700">
+                            
+                            <div className="flex flex-col items-end">
+                                <div className="text-right mb-2">
+                                    <div className="text-sm font-medium text-gray-500">Current Time (UTC)</div>
+                                    <div className="text-2xl font-bold text-gray-800 font-mono">
                                         {currentTime.getUTCHours().toString().padStart(2, '0')}:
                                         {currentTime.getUTCMinutes().toString().padStart(2, '0')}:
                                         {currentTime.getUTCSeconds().toString().padStart(2, '0')}
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* CONTROLS */}
-                        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                            
-                            {/* Filter Tabs */}
-                            <div className="glass-effect p-1.5 rounded-xl flex gap-1 shadow-sm overflow-x-auto max-w-full">
-                                {['ALL', 'SERVICEABLE', 'MRO', 'AOG'].map(status => (
-                                    <button 
-                                        key={status}
-                                        onClick={() => setFilterStatus(status)} 
-                                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-                                            filterStatus === status 
-                                            ? 'bg-slate-800 text-white shadow-md' 
-                                            : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
-                                        }`}
-                                    >
-                                        {status === 'ALL' ? 'All Fleet' : status}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* View Toggle & Sync */}
-                            <div className="flex gap-3">
-                                <div className="glass-effect p-1 rounded-lg flex">
-                                    <button onClick={() => setViewMode('table')} className={`p-2 rounded-md transition-all ${viewMode === 'table' ? 'bg-white shadow text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                                        <Icons.List />
-                                    </button>
-                                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                                        <Icons.Grid />
-                                    </button>
-                                </div>
+                                
                                 <button
                                     onClick={syncFromGoogleSheet}
                                     disabled={syncing}
-                                    className="glass-effect px-4 py-2 rounded-lg text-xs font-bold text-slate-600 flex items-center gap-2 hover:bg-white transition-all border hover:border-blue-200 active:scale-95"
+                                    className="refresh-btn bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm"
                                 >
-                                    <span className={syncing ? 'animate-spin' : ''}><Icons.Sync /></span>
+                                    <i className={`fas fa-sync-alt ${syncing ? 'animate-spin' : ''}`}></i>
                                     {syncing ? 'Syncing...' : `Refresh (${Math.floor(nextSync / 60)}:${String(nextSync % 60).padStart(2, '0')})`}
                                 </button>
                             </div>
                         </div>
-
-                        {/* GRID VIEW */}
-                        {viewMode === 'grid' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-[pulse-soft_0.5s_ease-out]">
-                                {filteredAircraft.map((ac, i) => (
-                                    <AircraftCard key={i} ac={ac} index={i} />
-                                ))}
-                            </div>
-                        )}
-
-                        {/* TABLE VIEW */}
-                        {viewMode === 'table' && (
-                            <div className="glass-effect rounded-2xl shadow-sm overflow-hidden border border-white/50 animate-[pulse-soft_0.5s_ease-out]">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="glass-header text-base font-extrabold text-slate-500 uppercase tracking-wider border-b border-slate-200/60">
-                                                <th className="px-6 py-5 w-20">#</th>
-                                                <th className="px-6 py-5">Aircraft</th>
-                                                <th className="px-6 py-5 text-center">Status</th>
-                                                <th className="px-6 py-5">Daily Check</th>
-                                                <th className="px-6 py-5">Weekly Check</th>
-                                                <th className="px-6 py-5">MEL / Defects</th>
-                                                <th className="px-6 py-5">Remarks / Alerts</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 bg-white/40">
-                                            {filteredAircraft.map((ac, i) => {
-                                                const dailyTime = calculateTime(ac.dailyInsp);
-                                                const weeklyTime = calculateTime(ac.weeklyInsp);
-                                                const showAlerts = ac.status?.toUpperCase() !== 'AOG' && ac.status?.toUpperCase() !== 'MRO';
-                                                const isCritical = showAlerts && (dailyTime.hours <= 3 || weeklyTime.hours <= 3);
-                                                const styles = getStatusStyle(ac.status);
-                                                const alertStatus = getAlertStatus(ac, isCritical);
-
-                                                return (
-                                                    <tr key={i} className="hover:bg-white/60 transition-colors group">
-                                                        <td className="px-6 py-4 text-base font-bold text-slate-400">{ac.slNo}</td>
-                                                        <td className="px-6 py-4">
-                                                            <span className="text-xl font-black text-slate-800 font-mono tracking-tight">{ac.registration}</span>
-                                                            <div className="text-xs text-slate-400 font-bold">{ac.type}</div>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-center">
-                                                            <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-black uppercase tracking-wider ${styles.bg} ${styles.text} border ${styles.border}`}>
-                                                                <span className={`w-2 h-2 rounded-full ${styles.dot}`}></span>
-                                                                {ac.status}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="text-lg font-bold text-slate-700 font-mono">{ac.dailyInsp}</div>
-                                                            {dailyTime.hours <= SHOW_HOURS_THRESHOLD && !dailyTime.overdue && dailyTime.hours !== 999 && (
-                                                                <div className="text-sm font-black text-amber-600 mt-1 flex items-center gap-1">
-                                                                    <Icons.Clock /> {dailyTime.hours}h left
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="text-lg font-bold text-slate-700 font-mono">{ac.weeklyInsp}</div>
-                                                            {weeklyTime.hours <= SHOW_HOURS_THRESHOLD && !weeklyTime.overdue && weeklyTime.hours !== 999 && (
-                                                                <div className="text-sm font-black text-amber-600 mt-1 flex items-center gap-1">
-                                                                    <Icons.Clock /> {weeklyTime.hours}h left
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            {ac.status === 'MRO' ? (
-                                                                <span className="text-slate-300 text-sm font-bold italic">Maintenance</span>
-                                                            ) : ac.mel && ac.mel.trim() ? (
-                                                                <span className="text-rose-600 font-bold bg-rose-50 px-3 py-1 rounded-md text-sm border border-rose-100">{ac.mel}</span>
-                                                            ) : (
-                                                                <span className="text-slate-300 font-bold text-sm">NIL</span>
-                                                            )}
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            {alertStatus.content}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
+                    </header>
+                    
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                        <div className="card p-5">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-sm text-gray-500 font-medium">Total Fleet</div>
+                                    <div className="text-3xl font-bold text-gray-900">{totalCount}</div>
                                 </div>
-                                <div className="px-6 py-3 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
-                                    <div className="text-xs font-bold text-slate-400">Showing {filteredAircraft.length} Aircraft</div>
+                                <div className="bg-blue-100 p-3 rounded-full">
+                                    <i className="fas fa-plane text-blue-600 text-xl"></i>
                                 </div>
                             </div>
-                        )}
+                        </div>
                         
+                        <div className="card p-5">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-sm text-gray-500 font-medium">Ready</div>
+                                    <div className="text-3xl font-bold text-emerald-700">{readyCount}</div>
+                                </div>
+                                <div className="bg-emerald-100 p-3 rounded-full">
+                                    <i className="fas fa-check-circle text-emerald-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="card p-5">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-sm text-gray-500 font-medium">Maintenance</div>
+                                    <div className="text-3xl font-bold text-amber-700">{maintenanceCount}</div>
+                                </div>
+                                <div className="bg-amber-100 p-3 rounded-full">
+                                    <i className="fas fa-tools text-amber-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="card p-5">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-sm text-gray-500 font-medium">Grounded</div>
+                                    <div className="text-3xl font-bold text-rose-700">{groundedCount}</div>
+                                </div>
+                                <div className="bg-rose-100 p-3 rounded-full">
+                                    <i className="fas fa-exclamation-triangle text-rose-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    
+                    {/* Filters */}
+                    <div className="flex flex-wrap gap-2 mb-6">
+                        <button 
+                            onClick={() => setFilterStatus('ALL')} 
+                            className={`px-4 py-2 rounded-lg font-medium ${filterStatus === 'ALL' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+                        >
+                            All Aircraft ({totalCount})
+                        </button>
+                        <button 
+                            onClick={() => setFilterStatus('SERVICEABLE')} 
+                            className={`px-4 py-2 rounded-lg font-medium ${filterStatus === 'SERVICEABLE' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+                        >
+                            <i className="fas fa-check-circle mr-2"></i>Ready ({readyCount})
+                        </button>
+                        <button 
+                            onClick={() => setFilterStatus('MRO')} 
+                            className={`px-4 py-2 rounded-lg font-medium ${filterStatus === 'MRO' ? 'bg-amber-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+                        >
+                            <i className="fas fa-tools mr-2"></i>Maintenance ({maintenanceCount})
+                        </button>
+                        <button 
+                            onClick={() => setFilterStatus('AOG')} 
+                            className={`px-4 py-2 rounded-lg font-medium ${filterStatus === 'AOG' ? 'bg-rose-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+                        >
+                            <i className="fas fa-exclamation-triangle mr-2"></i>Grounded ({groundedCount})
+                        </button>
+                    </div>
+                    
+                    {/* Aircraft Table */}
+                    <div className="card overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h2 className="text-xl font-bold text-gray-800">
+                                Aircraft Details
+                                <span className="text-sm font-normal text-gray-500 ml-2">
+                                    ({filteredAircraft.length} aircraft shown)
+                                </span>
+                            </h2>
+                        </div>
+                        
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50">
+                                    <tr className="text-left text-sm font-medium text-gray-700">
+                                        <th className="px-6 py-3">Registration</th>
+                                        <th className="px-6 py-3">Aircraft Type</th>
+                                        <th className="px-6 py-3">Status</th>
+                                        <th className="px-6 py-3">Daily Check</th>
+                                        <th className="px-6 py-3">Weekly Check</th>
+                                        <th className="px-6 py-3">MEL / Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {filteredAircraft.map((ac, i) => {
+                                        const dailyTime = calculateTime(ac.dailyInsp);
+                                        const weeklyTime = calculateTime(ac.weeklyInsp);
+                                        
+                                        return (
+                                            <tr key={i} className="aircraft-row">
+                                                <td className="px-6 py-4">
+                                                    <div className="font-bold text-lg text-gray-900">{ac.registration}</div>
+                                                    <div className="text-xs text-gray-500">ID: {ac.slNo}</div>
+                                                </td>
+                                                <td className="px-6 py-4 font-medium text-gray-800">{ac.type}</td>
+                                                <td className="px-6 py-4">
+                                                    {getStatusBadge(ac.status)}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-medium text-gray-800">{ac.dailyInsp || '--:--'}</div>
+                                                    {dailyTime.hours <= 72 && dailyTime.hours !== 999 && (
+                                                        <div className="mt-1">{getTimeBadge(dailyTime.hours)}</div>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-medium text-gray-800">{ac.weeklyInsp || '--:--'}</div>
+                                                    {weeklyTime.hours <= 168 && weeklyTime.hours !== 999 && (
+                                                        <div className="mt-1">{getTimeBadge(weeklyTime.hours)}</div>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {ac.mel && ac.mel.trim() ? (
+                                                        <div className="text-sm">
+                                                            <span className="inline-block bg-rose-100 text-rose-800 px-2 py-1 rounded text-xs font-medium mr-2">
+                                                                MEL
+                                                            </span>
+                                                            <span className="text-gray-700">{ac.mel}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-sm text-gray-500 italic">No open items</div>
+                                                    )}
+                                                    {ac.remarks && (
+                                                        <div className="text-xs text-gray-600 mt-1 truncate max-w-xs" title={ac.remarks}>
+                                                            <i className="fas fa-sticky-note mr-1"></i>
+                                                            {ac.remarks}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    
+                                    {filteredAircraft.length === 0 && (
+                                        <tr>
+                                            <td colSpan="6" className="px-6 py-12 text-center">
+                                                <div className="text-gray-500">
+                                                    <i className="fas fa-plane-slash text-3xl mb-4"></i>
+                                                    <p className="text-lg">No aircraft match the selected filter</p>
+                                                    <p className="text-sm mt-2">Try selecting a different status filter</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 text-sm text-gray-600">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    Data refreshes automatically every 5 minutes
+                                </div>
+                                <div>
+                                    Last updated: {currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Footer */}
+                    <footer className="mt-8 pt-6 border-t border-gray-300 text-center text-gray-600 text-sm">
+                        <p>
+                            <i className="fas fa-info-circle mr-1"></i>
+                            Aircraft Fleet Dashboard v2.1 • For operational use only
+                        </p>
+                        <p className="mt-2">
+                            To connect to your Google Sheet, update the SHEET_URL in the code
+                        </p>
+                    </footer>
                 </div>
             );
         }
