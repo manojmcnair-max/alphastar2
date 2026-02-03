@@ -1,632 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Daily Aircraft Status</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
+    <title>Aircraft Status</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    :root {
-      --bg: #0b1120;
-      --bg-alt: #020617;
-      --card: #020617;
-      --card-border: #1f2937;
-      --accent: #38bdf8;
-      --accent-soft: rgba(56, 189, 248, 0.1);
-      --accent-strong: #0ea5e9;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --danger: #f97373;
-      --danger-soft: rgba(248, 113, 113, 0.1);
-      --warning: #facc15;
-      --warning-soft: rgba(250, 204, 21, 0.1);
-      --success: #22c55e;
-      --success-soft: rgba(34, 197, 94, 0.1);
-      --table-header: #020617;
-      --row-hover: #020617;
-      --row-border: #1f2937;
-      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --radius-lg: 14px;
-      --radius-md: 10px;
-      --shadow-soft: 0 22px 60px rgba(15, 23, 42, 0.85);
-    }
+    <!-- EXISTING CSS REPLACED / CLEANED UP -->
+    <style>
+        :root {
+            --bg: #020617;
+            --bg-alt: #020617;
+            --card: #020617;
+            --border-soft: #1f2937;
+            --accent: #38bdf8;
+            --accent-soft: rgba(56, 189, 248, 0.1);
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --danger: #f97373;
+            --danger-soft: rgba(248, 113, 113, 0.12);
+            --warning: #eab308;
+            --warning-soft: rgba(234, 179, 8, 0.12);
+            --success: #22c55e;
+            --success-soft: rgba(34, 197, 94, 0.12);
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --shadow-soft: 0 18px 50px rgba(15, 23, 42, 0.9);
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {
-      font-family: var(--font-main);
-      background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #000 100%);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 24px;
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
-    }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, #111827 0, #020617 50%, #000);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 18px;
+        }
 
-    .page {
-      width: 100%;
-      max-width: 1300px;
-      margin: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
+        .wrapper {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
 
-    /* HEADER */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      padding: 18px 22px;
-      border-radius: var(--radius-lg);
-      background: linear-gradient(120deg, rgba(15, 23, 42, 0.98), rgba(8, 47, 73, 0.97));
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      box-shadow: var(--shadow-soft);
-      backdrop-filter: blur(18px);
-    }
+        /* HEADER AREA – same content, better look */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(120deg, rgba(15,23,42,0.96), rgba(8,47,73,0.96));
+            border: 1px solid rgba(148,163,184,0.4);
+            box-shadow: var(--shadow-soft);
+        }
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
+        header h1 {
+            font-size: 20px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
 
-    .logo {
-      width: 44px;
-      height: 44px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      background: radial-gradient(circle at 30% 30%, #38bdf8, #0f172a 60%, #000 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #f9fafb;
-      font-weight: 700;
-      font-size: 20px;
-      box-shadow: 0 0 35px rgba(56, 189, 248, 0.9);
-    }
+        header p {
+            font-size: 12px;
+            color: var(--muted);
+        }
 
-    .title-block h1 {
-      font-size: 22px;
-      letter-spacing: 0.03em;
-    }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--muted);
+        }
 
-    .title-block p {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(15,23,42,0.85);
+            border: 1px solid rgba(148,163,184,0.5);
+        }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 13px;
-    }
+        .pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+        }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border-radius: 999px;
-      padding: 7px 11px;
-      font-size: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      background: rgba(15, 23, 42, 0.7);
-    }
+        /* MAIN CARD */
+        .card {
+            background: radial-gradient(circle at top left, rgba(15,23,42,0.94), var(--bg-alt));
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-soft);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+        }
 
-    .badge-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
-    }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-soft);
+            background: linear-gradient(to right, rgba(15,23,42,0.96), rgba(8,47,73,0.96));
+        }
 
-    .header-right time {
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-    }
+        .card-header h2 {
+            font-size: 14px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #e5e7eb;
+        }
 
-    /* FILTERS / SUMMARY BAR */
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: space-between;
-    }
+        .card-header span {
+            font-size: 12px;
+            color: var(--muted);
+        }
 
-    .summary {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      font-size: 12px;
-      color: var(--muted);
-    }
+        /* EXISTING TABLE – only styling improved */
+        .table-wrapper {
+            overflow: auto;
+            max-height: calc(100vh - 230px);
+        }
 
-    .summary-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 9px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(31, 41, 55, 0.8);
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 900px;
+        }
 
-    .summary-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-    }
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
 
-    .summary-dot.green { background: var(--success); }
-    .summary-dot.amber { background: var(--warning); }
-    .summary-dot.red   { background: var(--danger); }
+        th,
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-soft);
+            text-align: left;
+            white-space: nowrap;
+        }
 
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      font-size: 12px;
-    }
+        th {
+            background: linear-gradient(to bottom, #020617, #020617);
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
 
-    .filter-control {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      color: var(--muted);
-    }
+        tbody tr:nth-child(even) {
+            background-color: rgba(15,23,42,0.9);
+        }
 
-    .filter-control input,
-    .filter-control select {
-      background: transparent;
-      border: none;
-      outline: none;
-      color: #e5e7eb;
-      font-size: 12px;
-    }
+        tbody tr:nth-child(odd) {
+            background-color: rgba(15,23,42,0.75);
+        }
 
-    .filter-control input::placeholder {
-      color: rgba(148, 163, 184, 0.8);
-    }
+        tbody tr:hover {
+            background: linear-gradient(to right, rgba(15,23,42,0.94), rgba(8,47,73,0.94));
+        }
 
-    /* MAIN CARD & TABLE */
-    .card {
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.85), var(--bg-alt));
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      box-shadow: var(--shadow-soft);
-      overflow: hidden;
-    }
+        td {
+            color: #e5e7eb;
+        }
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
-      background: linear-gradient(to right, rgba(15, 23, 42, 0.9), rgba(8, 47, 73, 0.9));
-    }
+        .muted {
+            color: var(--muted);
+        }
 
-    .card-header h2 {
-      font-size: 15px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: #e5e7eb;
-    }
+        /* SIMPLE STATUS BADGES – USE VIA EXISTING CELL CONTENT (OPTIONAL) */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            border: 1px solid transparent;
+        }
 
-    .card-header span {
-      font-size: 12px;
-      color: var(--muted);
-    }
+        .status-ok {
+            background: var(--success-soft);
+            color: var(--success);
+            border-color: rgba(34,197,94,0.6);
+        }
 
-    .table-wrapper {
-      max-height: calc(100vh - 220px);
-      overflow: auto;
-    }
+        .status-limited {
+            background: var(--warning-soft);
+            color: var(--warning);
+            border-color: rgba(234,179,8,0.6);
+        }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      min-width: 900px;
-    }
+        .status-aog {
+            background: var(--danger-soft);
+            color: var(--danger);
+            border-color: rgba(248,113,113,0.7);
+        }
 
-    thead {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background-color: currentColor;
+        }
 
-    th,
-    td {
-      padding: 9px 12px;
-      border-bottom: 1px solid var(--row-border);
-      text-align: left;
-      white-space: nowrap;
-    }
+        /* FOOTER */
+        footer {
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--muted);
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
 
-    th {
-      background: linear-gradient(to bottom, var(--table-header), #020617);
-      font-weight: 500;
-      font-size: 11px;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-      text-transform: uppercase;
-      position: relative;
-    }
+        @media (max-width: 900px) {
+            body {
+                padding: 12px;
+            }
 
-    th::after {
-      content: "";
-      position: absolute;
-      right: 0;
-      top: 25%;
-      bottom: 25%;
-      width: 1px;
-      background: radial-gradient(circle, rgba(55, 65, 81, 0.8), transparent);
-      opacity: 0.5;
-    }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
 
-    th:last-child::after {
-      display: none;
-    }
+            .card {
+                border-radius: 12px;
+            }
 
-    tbody tr:nth-child(even) {
-      background-color: rgba(15, 23, 42, 0.65);
-    }
+            .table-wrapper {
+                max-height: unset;
+            }
 
-    tbody tr:nth-child(odd) {
-      background-color: rgba(15, 23, 42, 0.95);
-    }
-
-    tbody tr:hover {
-      background: linear-gradient(to right, rgba(15, 23, 42, 0.9), rgba(8, 47, 73, 0.9));
-    }
-
-    td {
-      color: #e5e7eb;
-    }
-
-    td.muted {
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .aircraft-cell {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .aircraft-icon {
-      width: 20px;
-      height: 20px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 30%, #38bdf8, #0f172a 65%, #000 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: #e5e7eb;
-    }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 9px;
-      border-radius: 999px;
-      font-size: 11px;
-      border: 1px solid transparent;
-    }
-
-    .status-badge span {
-      font-variant: small-caps;
-      letter-spacing: 0.04em;
-    }
-
-    .status-available {
-      background: var(--success-soft);
-      color: var(--success);
-      border-color: rgba(34, 197, 94, 0.5);
-    }
-
-    .status-warning {
-      background: var(--warning-soft);
-      color: var(--warning);
-      border-color: rgba(250, 204, 21, 0.5);
-    }
-
-    .status-down {
-      background: var(--danger-soft);
-      color: var(--danger);
-      border-color: rgba(248, 113, 113, 0.6);
-    }
-
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background-color: currentColor;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      color: var(--muted);
-    }
-
-    .pill-icon {
-      opacity: 0.8;
-    }
-
-    /* FOOTER */
-    .footer {
-      margin-top: 6px;
-      font-size: 11px;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .footer span {
-      opacity: 0.8;
-    }
-
-    @media (max-width: 900px) {
-      body {
-        padding: 16px;
-      }
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .toolbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .table-wrapper {
-        max-height: unset;
-      }
-      table {
-        min-width: 700px;
-      }
-    }
-  </style>
+            table {
+                min-width: 700px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="page">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-left">
-        <div class="logo">AS</div>
-        <div class="title-block">
-          <h1>Daily Aircraft Status</h1>
-          <p>Operational overview for all aircraft in fleet</p>
+<div class="wrapper">
+    <!-- your original header / titles -->
+    <header>
+        <div>
+            <h1>Daily Aircraft Status</h1>
+            <p>Operational status overview from Google Sheets</p>
         </div>
-      </div>
-      <div class="header-right">
-        <div class="badge">
-          <span class="badge-dot"></span>
-          <span>Live operational view</span>
+        <div class="header-right">
+            <div class="pill">
+                <span class="pill-dot"></span>
+                <span>Live sheet data</span>
+            </div>
+            <span id="lastUpdated"></span>
         </div>
-        <time id="timestamp"></time>
-      </div>
     </header>
 
-    <!-- Summary & Filters -->
-    <div class="toolbar">
-      <div class="summary">
-        <div class="summary-item">
-          <span class="summary-dot green"></span>
-          <span>Serviceable: <strong>12</strong></span>
+    <div class="card">
+        <div class="card-header">
+            <h2>Fleet status</h2>
+            <span>Scroll to see all columns</span>
         </div>
-        <div class="summary-item">
-          <span class="summary-dot amber"></span>
-          <span>Limited: <strong>3</strong></span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-dot red"></span>
-          <span>Not available: <strong>1</strong></span>
-        </div>
-      </div>
 
-      <div class="filters">
-        <div class="filter-control">
-          <span>🔎</span>
-          <input type="text" placeholder="Search aircraft, tail no., location" />
+        <!-- EXISTING TABLE (structure & IDs should match your original) -->
+        <div class="table-wrapper">
+            <table id="data-table">
+                <thead>
+                <!-- your original header row generated from Google Sheet or hardcoded -->
+                <!-- example:
+                <tr>
+                    <th>Aircraft</th>
+                    <th>Tail No</th>
+                    ...
+                </tr>
+                -->
+                </thead>
+                <tbody id="table-body">
+                <!-- existing rows are injected by your script from Sheets -->
+                </tbody>
+            </table>
         </div>
-        <div class="filter-control">
-          <span>✈️</span>
-          <select>
-            <option value="">All fleets</option>
-            <option>Type A</option>
-            <option>Type B</option>
-            <option>Type C</option>
-          </select>
-        </div>
-        <div class="filter-control">
-          <span>⚙️</span>
-          <select>
-            <option value="">All status</option>
-            <option>Serviceable</option>
-            <option>Limited</option>
-            <option>Not available</option>
-          </select>
-        </div>
-      </div>
     </div>
 
-    <!-- Main Card with Table -->
-    <section class="card">
-      <div class="card-header">
-        <h2>Fleet status snapshot</h2>
-        <span>Scroll horizontally to view all data columns</span>
-      </div>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Aircraft</th>
-              <th>Tail No.</th>
-              <th>Location</th>
-              <th>Status</th>
-              <th>Next Flight</th>
-              <th>Last Flight</th>
-              <th>Remarks</th>
-              <th>Technical</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Example rows – replace with your real data -->
-            <tr>
-              <td>
-                <div class="aircraft-cell">
-                  <div class="aircraft-icon">A1</div>
-                  <div>
-                    <div>B737-800</div>
-                    <div class="muted">Fleet A</div>
-                  </div>
-                </div>
-              </td>
-              <td class="muted">HZ-A001</td>
-              <td class="muted">RUH</td>
-              <td>
-                <div class="status-badge status-available">
-                  <span class="status-dot"></span>
-                  <span>Serviceable</span>
-                </div>
-              </td>
-              <td class="muted">
-                <div class="pill">
-                  <span class="pill-icon">🕒</span>
-                  <span>DEP 10:45 · RUH → JED</span>
-                </div>
-              </td>
-              <td class="muted">Arr 08:20 · JED → RUH</td>
-              <td class="muted">Ready for assignment</td>
-              <td class="muted">
-                No open defects
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <div class="aircraft-cell">
-                  <div class="aircraft-icon">A2</div>
-                  <div>
-                    <div>B737-800</div>
-                    <div class="muted">Fleet A</div>
-                  </div>
-                </div>
-              </td>
-              <td class="muted">HZ-A002</td>
-              <td class="muted">JED</td>
-              <td>
-                <div class="status-badge status-warning">
-                  <span class="status-dot"></span>
-                  <span>Limited</span>
-                </div>
-              </td>
-              <td class="muted">
-                <div class="pill">
-                  <span class="pill-icon">🧰</span>
-                  <span>Dispatch with MEL</span>
-                </div>
-              </td>
-              <td class="muted">Arr 07:05 · DMM → JED</td>
-              <td class="muted">
-                MEL for APU – ground power required at turnarounds
-              </td>
-              <td class="muted">
-                Open logbook card #4572
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <div class="aircraft-cell">
-                  <div class="aircraft-icon">A3</div>
-                  <div>
-                    <div>A320neo</div>
-                    <div class="muted">Fleet B</div>
-                  </div>
-                </div>
-              </td>
-              <td class="muted">HZ-B010</td>
-              <td class="muted">DMM</td>
-              <td>
-                <div class="status-badge status-down">
-                  <span class="status-dot"></span>
-                  <span>Not available</span>
-                </div>
-              </td>
-              <td class="muted">
-                <div class="pill">
-                  <span class="pill-icon">⏸</span>
-                  <span>Flight cancelled</span>
-                </div>
-              </td>
-              <td class="muted">N/A</td>
-              <td class="muted">
-                AOG – engine inspection in progress, ETR 16:00L
-              </td>
-              <td class="muted">
-                Eng. ref: WO-99213
-              </td>
-            </tr>
-
-            <!-- Copy & adapt more rows as needed -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <span>All times local · Data for operational use only</span>
-      <span>Daily aircraft state · v1.0</span>
+    <footer>
+        <span>All times local – for operational use only</span>
+        <span>Daily aircraft state</span>
     </footer>
-  </div>
+</div>
 
-  <script>
-    // Simple timestamp showing current local date/time
-    function updateTimestamp() {
-      const el = document.getElementById("timestamp");
-      if (!el) return;
-      const now = new Date();
-      const opts = {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
-      };
-      el.textContent = now.toLocaleString(undefined, opts);
-    }
-    updateTimestamp();
-    setInterval(updateTimestamp, 60_000);
-  </script>
+<!-- your ORIGINAL script block below: keep the same fetch URL, IDs, parsing logic -->
+
+<script>
+/*
+  PASTE YOUR ORIGINAL GOOGLE SHEET FETCHING SCRIPT HERE.
+  Example skeleton (do not change your existing code, just keep it):
+
+  const sheetUrl = 'https://docs.google.com/spreadsheets/d/....../gviz/tq?';
+  fetch(sheetUrl)
+      .then(res => res.text())
+      .then(text => {
+          // parse & build table header + body into
+          // document.querySelector('#data-table thead')
+          // document.querySelector('#table-body')
+      });
+
+  Optionally you can update "lastUpdated" with sheet timestamp if you already have it:
+  document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleString();
+*/
+</script>
 </body>
 </html>
