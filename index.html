@@ -3,306 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aircraft Fleet Dashboard | Operations Center</title>
+    <title>Fleet Command | Aircraft Status Dashboard</title>
     
-    <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
             background-attachment: fixed;
-            color: #1e293b;
-            min-height: 100vh;
         }
         
+        .registration-font { font-family: 'JetBrains Mono', monospace; }
+
+        /* Advanced Glass Effect */
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 
+                        0 2px 8px rgba(0, 0, 0, 0.05),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
         }
-        
-        .glass-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.2);
+
+        /* Premium Gradient Overlays */
+        .gradient-overlay-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         }
-        
-        .stat-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
-            backdrop-filter: blur(20px);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 24px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-        }
-        
-        .header-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 32px;
-            border-radius: 20px 20px 0 0;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header-gradient::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 16px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .status-ready {
+
+        .gradient-overlay-emerald {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
         }
-        
-        .status-maintenance {
+
+        .gradient-overlay-amber {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
         }
-        
-        .status-grounded {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
+
+        .gradient-overlay-rose {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
         }
-        
-        .time-indicator {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+
+        /* Animated Gradients for Stats */
+        .stat-gradient {
+            position: relative;
+            overflow: hidden;
         }
-        
-        .time-warning {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #92400e;
-            border: 1px solid #fbbf24;
+
+        .stat-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 3s infinite;
         }
-        
-        .time-critical {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #991b1b;
-            border: 1px solid #f87171;
-            animation: pulse-border 2s ease-in-out infinite;
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
-        
-        .time-ok {
+
+        /* Status Badges */
+        .status-badge-ready {
             background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
             color: #065f46;
-            border: 1px solid #34d399;
+            border: 2px solid #34d399;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
         }
-        
-        @keyframes pulse-border {
-            0%, 100% {
-                border-color: #f87171;
-                box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.4);
-            }
-            50% {
-                border-color: #ef4444;
-                box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
-            }
+
+        .status-badge-maintenance {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border: 2px solid #fbbf24;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
         }
-        
-        .aircraft-row {
-            transition: all 0.2s ease;
-        }
-        
-        .aircraft-row:hover {
-            background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
-            transform: scale(1.005);
-        }
-        
-        .refresh-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-        
-        .refresh-btn:active {
-            transform: translateY(0);
-        }
-        
-        .filter-btn {
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .filter-btn-active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-        
-        .filter-btn-inactive {
-            background: white;
-            color: #64748b;
-            border-color: #e2e8f0;
-        }
-        
-        .filter-btn-inactive:hover {
-            border-color: #667eea;
-            color: #667eea;
-            transform: translateY(-2px);
-        }
-        
-        .icon-circle {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-        
-        .loading-spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .table-header {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-bottom: 2px solid #e2e8f0;
-        }
-        
-        .registration-badge {
-            font-family: 'Roboto Mono', monospace;
-            font-weight: 700;
-            font-size: 18px;
-            color: #1e293b;
-            letter-spacing: 1px;
-        }
-        
-        .mel-badge {
+
+        .status-badge-grounded {
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             color: #991b1b;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            border: 1px solid #f87171;
+            border: 2px solid #f87171;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+            animation: pulse-glow 2s ease-in-out infinite;
         }
-        
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+
+        @keyframes pulse-glow {
+            0%, 100% { 
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+            }
+            50% { 
+                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+            }
         }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(241, 245, 249, 0.5);
-            border-radius: 4px;
+
+        /* Time Alert Badges */
+        .time-critical {
+            background: linear-gradient(135deg, #fee2e2 0%, #fca5a5 100%);
+            color: #991b1b;
+            border: 2px solid #ef4444;
+            animation: pulse-border 2s ease-in-out infinite;
         }
-        
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 4px;
+
+        .time-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            color: #92400e;
+            border: 2px solid #f59e0b;
         }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46a0 100%);
+
+        .time-ok {
+            background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%);
+            color: #065f46;
+            border: 2px solid #10b981;
         }
-        
-        .pulse {
+
+        @keyframes pulse-border {
+            0%, 100% { 
+                border-color: #ef4444;
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+            }
+            50% { 
+                border-color: #dc2626;
+                box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Table Row Hover */
+        .table-row {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid transparent;
+        }
+
+        .table-row:hover {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.04) 0%, rgba(255, 255, 255, 0.8) 100%);
+            border-left-color: #3b82f6;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Card Hover Effects */
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Spinner Animation */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .spin-animation {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Pulse Animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .pulse-animation {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover { 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        /* MEL Badge */
+        .mel-indicator {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 2px solid #f87171;
+            color: #991b1b;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Icon Glow Effects */
+        .icon-glow-green {
+            filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.6));
+        }
+
+        .icon-glow-amber {
+            filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+        }
+
+        .icon-glow-red {
+            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
+        }
+
+        .icon-glow-blue {
+            filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+        }
+
+        /* Header Pattern */
+        .header-pattern {
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px),
+                repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px);
+        }
+
+        /* Fade In Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
+
+        // Aviation-themed SVG Icons
+        const Icons = {
+            Plane: ({ className = "w-6 h-6" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+            ),
+            CheckCircle: ({ className = "w-5 h-5" }) => (
+                <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+            ),
+            Wrench: ({ className = "w-5 h-5" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            ),
+            Alert: ({ className = "w-5 h-5" }) => (
+                <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                </svg>
+            ),
+            Clock: ({ className = "w-4 h-4" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+            Sync: ({ className = "w-5 h-5" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            ),
+            Calendar: ({ className = "w-4 h-4" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            ),
+            Clipboard: ({ className = "w-4 h-4" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+            ),
+            Shield: ({ className = "w-4 h-4" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            ),
+        };
 
         function Dashboard() {
             const [aircraft, setAircraft] = useState([]);
@@ -311,517 +300,504 @@
             const [nextSync, setNextSync] = useState(300);
             const [loading, setLoading] = useState(true);
             const [filterStatus, setFilterStatus] = useState('ALL');
-            
-            // Sample data for demo (will be replaced by Google Sheets data)
-            const sampleAircraft = [
-                {
-                    slNo: 1,
-                    registration: "VT-ABC",
-                    type: "Boeing 737-800",
-                    status: "SERVICEABLE",
-                    dailyInsp: "15/05/2024 08:00",
-                    weeklyInsp: "22/05/2024 12:00",
-                    mel: "",
-                    remarks: "Normal operations"
-                },
-                {
-                    slNo: 2,
-                    registration: "VT-XYZ",
-                    type: "Airbus A320neo",
-                    status: "MRO",
-                    dailyInsp: "16/05/2024 10:30",
-                    weeklyInsp: "20/05/2024 14:00",
-                    mel: "APU Inoperative",
-                    remarks: "Scheduled maintenance in progress"
-                },
-                {
-                    slNo: 3,
-                    registration: "VT-DEF",
-                    type: "Boeing 737 MAX",
-                    status: "AOG",
-                    dailyInsp: "14/05/2024 06:00",
-                    weeklyInsp: "19/05/2024 09:00",
-                    mel: "Engine #2 Issue, Hydraulic System B",
-                    remarks: "Awaiting spare parts"
-                },
-                {
-                    slNo: 4,
-                    registration: "VT-GHI",
-                    type: "Airbus A321",
-                    status: "SERVICEABLE",
-                    dailyInsp: "17/05/2024 07:30",
-                    weeklyInsp: "23/05/2024 11:00",
-                    mel: "",
-                    remarks: ""
-                },
-                {
-                    slNo: 5,
-                    registration: "VT-JKL",
-                    type: "Boeing 787-9",
-                    status: "SERVICEABLE",
-                    dailyInsp: "16/05/2024 09:00",
-                    weeklyInsp: "21/05/2024 13:30",
-                    mel: "",
-                    remarks: "Ready for long-haul"
-                },
-                {
-                    slNo: 6,
-                    registration: "VT-MNO",
-                    type: "Airbus A330-300",
-                    status: "MRO",
-                    dailyInsp: "13/05/2024 08:30",
-                    weeklyInsp: "18/05/2024 10:00",
-                    mel: "IFE System Degraded",
-                    remarks: "C-check underway"
-                }
+
+            const SHOW_HOURS_THRESHOLD = 15;
+            const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=0&single=true&output=csv';
+
+            // Sample data for demo
+            const sampleData = [
+                { slNo: 1, registration: "VT-ABC", type: "Boeing 737-800", status: "SERVICEABLE", dailyInsp: "15/05/2024 08:00", weeklyInsp: "22/05/2024 12:00", mel: "", remarks: "Normal operations" },
+                { slNo: 2, registration: "VT-XYZ", type: "Airbus A320neo", status: "MRO", dailyInsp: "16/05/2024 10:30", weeklyInsp: "20/05/2024 14:00", mel: "APU Inoperative", remarks: "Scheduled C-Check" },
+                { slNo: 3, registration: "VT-DEF", type: "Boeing 737 MAX", status: "AOG", dailyInsp: "14/05/2024 06:00", weeklyInsp: "19/05/2024 09:00", mel: "Engine #2 Issue, Hydraulic System B", remarks: "Awaiting spare parts" },
+                { slNo: 4, registration: "VT-GHI", type: "Airbus A321", status: "SERVICEABLE", dailyInsp: "17/05/2024 07:30", weeklyInsp: "23/05/2024 11:00", mel: "", remarks: "" },
+                { slNo: 5, registration: "VT-JKL", type: "Boeing 787-9", status: "SERVICEABLE", dailyInsp: "16/05/2024 09:00", weeklyInsp: "21/05/2024 13:30", mel: "", remarks: "Ready for long-haul" },
+                { slNo: 6, registration: "VT-MNO", type: "Airbus A330-300", status: "MRO", dailyInsp: "13/05/2024 08:30", weeklyInsp: "18/05/2024 10:00", mel: "IFE System Degraded", remarks: "C-check underway" },
+                { slNo: 7, registration: "VT-PQR", type: "Boeing 777-300ER", status: "SERVICEABLE", dailyInsp: "16/05/2024 11:00", weeklyInsp: "22/05/2024 15:00", mel: "", remarks: "" },
+                { slNo: 8, registration: "VT-STU", type: "Airbus A350-900", status: "SERVICEABLE", dailyInsp: "17/05/2024 06:00", weeklyInsp: "23/05/2024 10:00", mel: "", remarks: "" }
             ];
-            
-            // Initialize with sample data
+
+            async function syncFromGoogleSheet() {
+                setSyncing(true);
+                try {
+                    let response = await fetch(SHEET_URL);
+                    if (!response.ok) {
+                        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                        response = await fetch(proxyUrl + encodeURIComponent(SHEET_URL));
+                    }
+                    const csvText = await response.text();
+                    const lines = csvText.trim().split('\n');
+                    const parsedData = lines.slice(1).map(line => {
+                        const cols = line.split(',').map(col => col.trim().replace(/"/g, ''));
+                        return {
+                            slNo: parseInt(cols[0]),
+                            registration: cols[1],
+                            type: cols[2],
+                            status: cols[3],
+                            dailyInsp: cols[4],
+                            weeklyInsp: cols[5],
+                            mel: cols[6] || '',
+                            remarks: cols[7] || ''
+                        };
+                    }).filter(item => item.registration);
+                    setAircraft(parsedData);
+                } catch (error) {
+                    console.error('Sync failed:', error);
+                    setAircraft(sampleData);
+                }
+                setSyncing(false);
+                setNextSync(300);
+            }
+
             useEffect(() => {
-                setAircraft(sampleAircraft);
-                setLoading(false);
+                syncFromGoogleSheet();
             }, []);
-            
-            // Update current time every minute
+
             useEffect(() => {
-                const timer = setInterval(() => {
-                    setCurrentTime(new Date());
-                }, 60000);
-                
+                const timer = setInterval(() => setCurrentTime(new Date()), 60000);
                 return () => clearInterval(timer);
             }, []);
-            
-            // Countdown for next sync
+
             useEffect(() => {
                 const countdown = setInterval(() => {
                     setNextSync(prev => {
                         if (prev <= 1) {
-                            handleRefresh();
+                            syncFromGoogleSheet();
                             return 300;
                         }
                         return prev - 1;
                     });
                 }, 1000);
-                
                 return () => clearInterval(countdown);
             }, []);
-            
-            const handleRefresh = () => {
-                setSyncing(true);
-                setTimeout(() => {
-                    setAircraft([...sampleAircraft]);
-                    setCurrentTime(new Date());
-                    setSyncing(false);
-                    setNextSync(300);
-                }, 1500);
-            };
-            
+
+            useEffect(() => {
+                if (aircraft.length > 0) setLoading(false);
+            }, [aircraft]);
+
             const parseDateTime = (dateTimeStr) => {
                 if (!dateTimeStr || dateTimeStr.trim() === '') return null;
-                
                 try {
                     const [datePart, timePart] = dateTimeStr.split(' ');
                     const [day, month, year] = datePart.split('/');
                     const [hours, minutes] = timePart.split(':');
-                    
                     return new Date(year, month - 1, day, hours, minutes);
                 } catch (e) {
                     return null;
                 }
             };
-            
+
             const calculateTime = (dateTimeStr) => {
                 const targetDate = parseDateTime(dateTimeStr);
                 if (!targetDate) return { hours: 999, text: 'N/A' };
-                
                 const now = currentTime;
                 const diffMs = targetDate - now;
                 const diffHours = Math.round(diffMs / (1000 * 60 * 60));
-                
                 if (diffHours < 0) {
                     return { hours: Math.abs(diffHours), text: `${Math.abs(diffHours)}h overdue`, overdue: true };
-                } else if (diffHours < 24) {
-                    return { hours: diffHours, text: `${diffHours}h remaining` };
+                }
+                return { hours: diffHours, text: `${diffHours}h remaining` };
+            };
+
+            const getTimeBadge = (hours, overdue) => {
+                if (overdue || hours <= 3) {
+                    return (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider time-critical">
+                            <Icons.Alert className="w-3.5 h-3.5" />
+                            CRITICAL
+                        </span>
+                    );
+                } else if (hours <= 12) {
+                    return (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider time-warning">
+                            <Icons.Clock className="w-3.5 h-3.5" />
+                            WARNING
+                        </span>
+                    );
                 } else {
-                    const days = Math.floor(diffHours / 24);
-                    return { hours: diffHours, text: `${days}d ${diffHours % 24}h` };
+                    return (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider time-ok">
+                            <Icons.CheckCircle className="w-3.5 h-3.5" />
+                            ON TRACK
+                        </span>
+                    );
                 }
             };
-            
-            const getTimeBadge = (hours) => {
-                if (hours <= 12) {
-                    return <span className="time-indicator time-critical"><i className="fas fa-clock mr-1"></i>CRITICAL</span>;
-                } else if (hours <= 48) {
-                    return <span className="time-indicator time-warning"><i className="fas fa-exclamation-triangle mr-1"></i>WARNING</span>;
-                } else {
-                    return <span className="time-indicator time-ok"><i className="fas fa-check-circle mr-1"></i>ON TRACK</span>;
-                }
-            };
-            
+
             const getStatusBadge = (status) => {
-                switch(status) {
-                    case 'SERVICEABLE':
-                        return <span className="status-badge status-ready"><i className="fas fa-circle-check"></i>SERVICEABLE</span>;
-                    case 'MRO':
-                        return <span className="status-badge status-maintenance"><i className="fas fa-wrench"></i>MAINTENANCE</span>;
-                    case 'AOG':
-                        return <span className="status-badge status-grounded"><i className="fas fa-plane-slash"></i>GROUNDED</span>;
-                    default:
-                        return <span className="status-badge">{status}</span>;
+                const statusUpper = status?.toUpperCase() || '';
+                if (statusUpper === 'SERVICEABLE') {
+                    return (
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-wider status-badge-ready">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 icon-glow-green"></span>
+                            SERVICEABLE
+                        </span>
+                    );
+                } else if (statusUpper === 'MRO') {
+                    return (
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-wider status-badge-maintenance">
+                            <Icons.Wrench className="w-4 h-4 icon-glow-amber" />
+                            MAINTENANCE
+                        </span>
+                    );
+                } else if (statusUpper === 'AOG') {
+                    return (
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-wider status-badge-grounded">
+                            <Icons.Alert className="w-4 h-4 icon-glow-red pulse-animation" />
+                            GROUNDED
+                        </span>
+                    );
                 }
+                return <span className="px-4 py-2 rounded-xl text-sm font-black uppercase">{status}</span>;
             };
-            
+
             const formatNextSync = (seconds) => {
                 const mins = Math.floor(seconds / 60);
                 const secs = seconds % 60;
                 return `${mins}:${secs.toString().padStart(2, '0')}`;
             };
-            
-            // Filter aircraft
+
             const filteredAircraft = filterStatus === 'ALL' 
                 ? aircraft 
-                : aircraft.filter(ac => ac.status === filterStatus);
-            
-            // Calculate statistics
+                : aircraft.filter(ac => ac.status?.toUpperCase() === filterStatus);
+
             const totalCount = aircraft.length;
-            const readyCount = aircraft.filter(ac => ac.status === 'SERVICEABLE').length;
-            const maintenanceCount = aircraft.filter(ac => ac.status === 'MRO').length;
-            const groundedCount = aircraft.filter(ac => ac.status === 'AOG').length;
-            
+            const readyCount = aircraft.filter(ac => ac.status?.toUpperCase() === 'SERVICEABLE').length;
+            const maintenanceCount = aircraft.filter(ac => ac.status?.toUpperCase() === 'MRO').length;
+            const groundedCount = aircraft.filter(ac => ac.status?.toUpperCase() === 'AOG').length;
+
             if (loading) {
                 return (
                     <div className="min-h-screen flex items-center justify-center">
                         <div className="text-center">
-                            <div className="loading-spinner mx-auto mb-4"></div>
-                            <p className="text-white text-lg font-medium">Loading Aircraft Data...</p>
+                            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full spin-animation mx-auto mb-4"></div>
+                            <p className="text-white text-xl font-bold">Loading Fleet Data...</p>
                         </div>
                     </div>
                 );
             }
-            
+
             return (
-                <div className="min-h-screen p-4 md:p-8">
+                <div className="min-h-screen p-4 md:p-8 fade-in">
                     {/* Header */}
-                    <div className="glass-card mb-8">
-                        <div className="header-gradient relative z-10">
-                            <div className="flex items-center justify-between flex-wrap gap-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="icon-circle bg-white bg-opacity-20">
-                                        <i className="fas fa-plane-departure text-white"></i>
+                    <div className="glass-card rounded-3xl mb-8 overflow-hidden">
+                        <div className="gradient-overlay-blue header-pattern p-8">
+                            <div className="flex items-center justify-between flex-wrap gap-6">
+                                <div className="flex items-center gap-5">
+                                    <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                        <Icons.Plane className="w-8 h-8 text-white icon-glow-blue" />
                                     </div>
                                     <div>
-                                        <h1 className="text-3xl md:text-4xl font-bold mb-1">
-                                            Aircraft Fleet Dashboard
+                                        <h1 className="text-4xl md:text-5xl font-black text-white mb-1 tracking-tight">
+                                            Fleet Command Center
                                         </h1>
-                                        <p className="text-white text-opacity-90 text-sm md:text-base">
-                                            Real-time Operations Monitoring & Status
+                                        <p className="text-blue-100 text-base font-medium flex items-center gap-2">
+                                            <Icons.Shield className="w-4 h-4" />
+                                            Real-time Aircraft Status Monitoring
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <div className="text-right">
-                                        <div className="text-white text-opacity-90 text-sm mb-1">
-                                            <i className="far fa-clock mr-2"></i>
+                                        <div className="text-white text-base font-bold mb-1 flex items-center justify-end gap-2">
+                                            <Icons.Clock className="w-5 h-5" />
                                             {currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})}
                                         </div>
-                                        <div className="text-white text-opacity-75 text-xs">
+                                        <div className="text-blue-100 text-sm font-medium">
                                             {currentTime.toLocaleDateString([], {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'})}
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={handleRefresh}
+                                    <button
+                                        onClick={syncFromGoogleSheet}
                                         disabled={syncing}
-                                        className="refresh-btn flex items-center gap-2"
+                                        className="bg-white bg-opacity-20 backdrop-blur-sm px-6 py-3 rounded-xl text-white font-bold flex items-center gap-2 hover:bg-opacity-30 transition-all active:scale-95 border border-white border-opacity-30"
                                     >
-                                        {syncing ? (
-                                            <>
-                                                <div className="loading-spinner"></div>
-                                                <span>Syncing...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <i className="fas fa-sync-alt"></i>
-                                                <span>Refresh</span>
-                                            </>
-                                        )}
+                                        <Icons.Sync className={`w-5 h-5 ${syncing ? 'spin-animation' : ''}`} />
+                                        {syncing ? 'Syncing...' : 'Refresh'}
                                     </button>
                                 </div>
                             </div>
-                            <div className="mt-4 text-white text-opacity-80 text-sm flex items-center gap-2">
-                                <i className="fas fa-info-circle"></i>
-                                <span>Next auto-refresh in: {formatNextSync(nextSync)}</span>
+                            <div className="mt-4 text-blue-100 text-sm font-medium flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-300 pulse-animation"></span>
+                                Next auto-refresh in: {formatNextSync(nextSync)}
                             </div>
                         </div>
                     </div>
-                    
+
                     {/* Statistics Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div className="stat-card">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-sm text-gray-500 font-semibold mb-2 uppercase tracking-wide">
-                                        Total Fleet
-                                    </div>
-                                    <div className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        {/* Total Fleet */}
+                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-14 h-14 gradient-overlay-blue rounded-xl flex items-center justify-center">
+                                    <Icons.Plane className="w-7 h-7 text-white" />
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-5xl font-black bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                                         {totalCount}
                                     </div>
-                                    <div className="text-xs text-gray-500 mt-1">Aircraft</div>
-                                </div>
-                                <div className="icon-circle bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-                                    <i className="fas fa-plane"></i>
                                 </div>
                             </div>
+                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Total Fleet</div>
+                            <div className="text-xs text-slate-400 font-semibold">Aircraft in Service</div>
                         </div>
-                        
-                        <div className="stat-card">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-sm text-gray-500 font-semibold mb-2 uppercase tracking-wide">
-                                        Serviceable
-                                    </div>
-                                    <div className="text-4xl font-bold text-emerald-600">
+
+                        {/* Serviceable */}
+                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-14 h-14 gradient-overlay-emerald rounded-xl flex items-center justify-center">
+                                    <Icons.CheckCircle className="w-7 h-7 text-white" />
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-5xl font-black text-emerald-600">
                                         {readyCount}
                                     </div>
-                                    <div className="text-xs text-emerald-600 mt-1 font-medium">
-                                        {Math.round((readyCount/totalCount)*100)}% Ready
-                                    </div>
-                                </div>
-                                <div className="icon-circle bg-gradient-to-br from-emerald-400 to-green-600 text-white">
-                                    <i className="fas fa-circle-check"></i>
                                 </div>
                             </div>
+                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Serviceable</div>
+                            <div className="text-xs font-bold text-emerald-600">
+                                {Math.round((readyCount/totalCount)*100)}% Operational Ready
+                            </div>
                         </div>
-                        
-                        <div className="stat-card">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-sm text-gray-500 font-semibold mb-2 uppercase tracking-wide">
-                                        Maintenance
-                                    </div>
-                                    <div className="text-4xl font-bold text-amber-600">
+
+                        {/* Maintenance */}
+                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-14 h-14 gradient-overlay-amber rounded-xl flex items-center justify-center">
+                                    <Icons.Wrench className="w-7 h-7 text-white" />
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-5xl font-black text-amber-600">
                                         {maintenanceCount}
                                     </div>
-                                    <div className="text-xs text-amber-600 mt-1 font-medium">
-                                        {Math.round((maintenanceCount/totalCount)*100)}% in MRO
-                                    </div>
-                                </div>
-                                <div className="icon-circle bg-gradient-to-br from-amber-400 to-orange-600 text-white">
-                                    <i className="fas fa-wrench"></i>
                                 </div>
                             </div>
+                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Maintenance</div>
+                            <div className="text-xs font-bold text-amber-600">
+                                {Math.round((maintenanceCount/totalCount)*100)}% in MRO
+                            </div>
                         </div>
-                        
-                        <div className="stat-card">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-sm text-gray-500 font-semibold mb-2 uppercase tracking-wide">
-                                        Grounded
-                                    </div>
-                                    <div className="text-4xl font-bold text-rose-600">
+
+                        {/* Grounded */}
+                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-14 h-14 gradient-overlay-rose rounded-xl flex items-center justify-center">
+                                    <Icons.Alert className="w-7 h-7 text-white pulse-animation" />
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-5xl font-black text-rose-600">
                                         {groundedCount}
                                     </div>
-                                    <div className="text-xs text-rose-600 mt-1 font-medium">
-                                        {groundedCount > 0 ? <><i className="fas fa-exclamation-triangle mr-1"></i>Needs Attention</> : 'None'}
-                                    </div>
                                 </div>
-                                <div className="icon-circle bg-gradient-to-br from-rose-400 to-red-600 text-white">
-                                    <i className="fas fa-plane-slash"></i>
-                                </div>
+                            </div>
+                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Grounded</div>
+                            <div className="text-xs font-bold text-rose-600">
+                                {groundedCount > 0 ? 'Immediate Attention Required' : 'All Clear'}
                             </div>
                         </div>
                     </div>
-                    
-                    {/* Filters */}
+
+                    {/* Filter Buttons */}
                     <div className="flex flex-wrap gap-3 mb-6">
-                        <button 
-                            onClick={() => setFilterStatus('ALL')} 
-                            className={`filter-btn ${filterStatus === 'ALL' ? 'filter-btn-active' : 'filter-btn-inactive'}`}
-                        >
-                            <i className="fas fa-layer-group mr-2"></i>
-                            All Aircraft ({totalCount})
-                        </button>
-                        <button 
-                            onClick={() => setFilterStatus('SERVICEABLE')} 
-                            className={`filter-btn ${filterStatus === 'SERVICEABLE' ? 'filter-btn-active' : 'filter-btn-inactive'}`}
-                        >
-                            <i className="fas fa-circle-check mr-2"></i>
-                            Serviceable ({readyCount})
-                        </button>
-                        <button 
-                            onClick={() => setFilterStatus('MRO')} 
-                            className={`filter-btn ${filterStatus === 'MRO' ? 'filter-btn-active' : 'filter-btn-inactive'}`}
-                        >
-                            <i className="fas fa-wrench mr-2"></i>
-                            Maintenance ({maintenanceCount})
-                        </button>
-                        <button 
-                            onClick={() => setFilterStatus('AOG')} 
-                            className={`filter-btn ${filterStatus === 'AOG' ? 'filter-btn-active' : 'filter-btn-inactive'}`}
-                        >
-                            <i className="fas fa-plane-slash mr-2"></i>
-                            Grounded ({groundedCount})
-                        </button>
+                        {[
+                            { label: 'All Aircraft', value: 'ALL', count: totalCount, icon: Icons.Plane, color: 'blue' },
+                            { label: 'Serviceable', value: 'SERVICEABLE', count: readyCount, icon: Icons.CheckCircle, color: 'emerald' },
+                            { label: 'Maintenance', value: 'MRO', count: maintenanceCount, icon: Icons.Wrench, color: 'amber' },
+                            { label: 'Grounded', value: 'AOG', count: groundedCount, icon: Icons.Alert, color: 'rose' }
+                        ].map(filter => {
+                            const Icon = filter.icon;
+                            const isActive = filterStatus === filter.value;
+                            return (
+                                <button
+                                    key={filter.value}
+                                    onClick={() => setFilterStatus(filter.value)}
+                                    className={`px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
+                                        isActive 
+                                            ? `gradient-overlay-${filter.color} text-white shadow-lg scale-105` 
+                                            : 'glass-card text-slate-600 hover:scale-105'
+                                    }`}
+                                >
+                                    <Icon className="w-5 h-5" />
+                                    {filter.label} ({filter.count})
+                                </button>
+                            );
+                        })}
                     </div>
-                    
+
                     {/* Aircraft Table */}
-                    <div className="glass-card overflow-hidden">
-                        <div className="px-6 py-5 border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                    <div className="glass-card rounded-3xl overflow-hidden">
+                        <div className="glass-header px-8 py-6">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                                    <i className="fas fa-list-ul text-indigo-600"></i>
-                                    Aircraft Details
-                                    <span className="text-base font-normal text-gray-500 ml-2">
-                                        ({filteredAircraft.length} {filteredAircraft.length === 1 ? 'aircraft' : 'aircraft'} shown)
+                                <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                                    <Icons.Clipboard className="w-6 h-6 text-blue-600" />
+                                    Aircraft Status Details
+                                    <span className="text-base font-semibold text-slate-400">
+                                        ({filteredAircraft.length} aircraft)
                                     </span>
                                 </h2>
                             </div>
                         </div>
-                        
+
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="table-header">
-                                    <tr className="text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
-                                        <th className="px-6 py-4">
-                                            <i className="fas fa-hashtag mr-2 text-gray-400"></i>
-                                            Registration
+                                <thead>
+                                    <tr className="glass-header border-b-2 border-slate-200">
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">#</th>
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2">
+                                                <Icons.Plane className="w-4 h-4" />
+                                                Registration
+                                            </div>
                                         </th>
-                                        <th className="px-6 py-4">
-                                            <i className="fas fa-plane mr-2 text-gray-400"></i>
-                                            Aircraft Type
+                                        <th className="px-8 py-5 text-center text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Icons.Shield className="w-4 h-4" />
+                                                Status
+                                            </div>
                                         </th>
-                                        <th className="px-6 py-4">
-                                            <i className="fas fa-signal mr-2 text-gray-400"></i>
-                                            Status
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2">
+                                                <Icons.Calendar className="w-4 h-4" />
+                                                Daily Check
+                                            </div>
                                         </th>
-                                        <th className="px-6 py-4">
-                                            <i className="fas fa-calendar-day mr-2 text-gray-400"></i>
-                                            Daily Check
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2">
+                                                <Icons.Calendar className="w-4 h-4" />
+                                                Weekly Check
+                                            </div>
                                         </th>
-                                        <th className="px-6 py-4">
-                                            <i className="fas fa-calendar-week mr-2 text-gray-400"></i>
-                                            Weekly Check
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2">
+                                                <Icons.Alert className="w-4 h-4" />
+                                                MEL / Defects
+                                            </div>
                                         </th>
-                                        <th className="px-6 py-4">
-                                            <i className="fas fa-clipboard-list mr-2 text-gray-400"></i>
-                                            MEL / Notes
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2">
+                                                <Icons.Clipboard className="w-4 h-4" />
+                                                Remarks
+                                            </div>
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200">
+                                <tbody>
                                     {filteredAircraft.map((ac, i) => {
                                         const dailyTime = calculateTime(ac.dailyInsp);
                                         const weeklyTime = calculateTime(ac.weeklyInsp);
-                                        
+                                        const showDailyAlert = dailyTime.hours <= SHOW_HOURS_THRESHOLD && dailyTime.hours !== 999;
+                                        const showWeeklyAlert = weeklyTime.hours <= SHOW_HOURS_THRESHOLD && weeklyTime.hours !== 999;
+
                                         return (
-                                            <tr key={i} className="aircraft-row bg-white">
-                                                <td className="px-6 py-5">
-                                                    <div className="registration-badge mb-1">
+                                            <tr key={i} className="table-row">
+                                                <td className="px-8 py-6">
+                                                    <div className="text-lg font-black text-slate-400">{ac.slNo}</div>
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    <div className="text-2xl font-black text-slate-800 registration-font tracking-tight mb-1">
                                                         {ac.registration}
                                                     </div>
-                                                    <div className="text-xs text-gray-400 font-medium">
-                                                        ID: {ac.slNo}
-                                                    </div>
+                                                    <div className="text-sm font-semibold text-slate-500">{ac.type}</div>
                                                 </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="font-semibold text-gray-800 text-base">
-                                                        {ac.type}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-5">
+                                                <td className="px-8 py-6 text-center">
                                                     {getStatusBadge(ac.status)}
                                                 </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="font-medium text-gray-700 mb-1 flex items-center gap-2">
-                                                        <i className="far fa-calendar text-indigo-500 text-sm"></i>
+                                                <td className="px-8 py-6">
+                                                    <div className="text-base font-bold text-slate-700 registration-font mb-2">
                                                         {ac.dailyInsp || '--:--'}
                                                     </div>
-                                                    {dailyTime.hours <= 72 && dailyTime.hours !== 999 && (
-                                                        <div className="mt-2">{getTimeBadge(dailyTime.hours)}</div>
+                                                    {showDailyAlert && (
+                                                        <div className="space-y-1">
+                                                            {getTimeBadge(dailyTime.hours, dailyTime.overdue)}
+                                                            <div className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                                                                <Icons.Clock className="w-3 h-3" />
+                                                                {dailyTime.hours}h remaining
+                                                            </div>
+                                                        </div>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="font-medium text-gray-700 mb-1 flex items-center gap-2">
-                                                        <i className="far fa-calendar text-purple-500 text-sm"></i>
+                                                <td className="px-8 py-6">
+                                                    <div className="text-base font-bold text-slate-700 registration-font mb-2">
                                                         {ac.weeklyInsp || '--:--'}
                                                     </div>
-                                                    {weeklyTime.hours <= 168 && weeklyTime.hours !== 999 && (
-                                                        <div className="mt-2">{getTimeBadge(weeklyTime.hours)}</div>
+                                                    {showWeeklyAlert && (
+                                                        <div className="space-y-1">
+                                                            {getTimeBadge(weeklyTime.hours, weeklyTime.overdue)}
+                                                            <div className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                                                                <Icons.Clock className="w-3 h-3" />
+                                                                {weeklyTime.hours}h remaining
+                                                            </div>
+                                                        </div>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-5">
+                                                <td className="px-8 py-6">
                                                     {ac.mel && ac.mel.trim() ? (
                                                         <div className="space-y-2">
-                                                            <div>
-                                                                <span className="mel-badge">
-                                                                    <i className="fas fa-exclamation-circle mr-1"></i>
-                                                                    MEL ACTIVE
-                                                                </span>
+                                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg mel-indicator text-xs font-black uppercase">
+                                                                <Icons.Alert className="w-3.5 h-3.5" />
+                                                                MEL ACTIVE
                                                             </div>
-                                                            <div className="text-sm text-gray-700 font-medium">
+                                                            <div className="text-sm font-semibold text-slate-700 leading-relaxed">
                                                                 {ac.mel}
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        <div className="text-sm text-gray-400 italic flex items-center gap-2">
-                                                            <i className="fas fa-check-circle text-emerald-500"></i>
-                                                            No open items
+                                                        <div className="text-sm font-bold text-slate-300 italic flex items-center gap-2">
+                                                            <Icons.CheckCircle className="w-4 h-4 text-emerald-400" />
+                                                            NIL
                                                         </div>
                                                     )}
-                                                    {ac.remarks && (
-                                                        <div className="mt-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200" title={ac.remarks}>
-                                                            <i className="fas fa-sticky-note text-indigo-500 mr-2"></i>
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    {ac.remarks && ac.remarks.trim() ? (
+                                                        <div className="text-sm font-semibold text-slate-600 bg-slate-50 px-4 py-2 rounded-lg border-l-4 border-blue-500">
                                                             {ac.remarks}
                                                         </div>
+                                                    ) : (
+                                                        <div className="text-sm font-bold text-slate-300 italic">—</div>
                                                     )}
                                                 </td>
                                             </tr>
                                         );
                                     })}
-                                    
+
                                     {filteredAircraft.length === 0 && (
                                         <tr>
-                                            <td colSpan="6" className="px-6 py-16 text-center">
-                                                <div className="text-gray-400">
-                                                    <i className="fas fa-plane-slash text-5xl mb-4 text-gray-300"></i>
-                                                    <p className="text-xl font-semibold text-gray-600 mb-2">No aircraft match the selected filter</p>
-                                                    <p className="text-sm">Try selecting a different status filter to view aircraft</p>
-                                                </div>
+                                            <td colSpan="7" className="px-8 py-20 text-center">
+                                                <Icons.Plane className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                                                <p className="text-2xl font-bold text-slate-400 mb-2">No Aircraft Found</p>
+                                                <p className="text-sm text-slate-400">Try selecting a different filter</p>
                                             </td>
                                         </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
-                        
-                        <div className="px-6 py-4 border-t-2 border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
-                            <div className="flex justify-between items-center flex-wrap gap-3 text-sm text-gray-600">
-                                <div className="flex items-center gap-2">
-                                    <i className="fas fa-sync-alt text-indigo-600"></i>
-                                    <span className="font-medium">Auto-refresh enabled</span>
-                                    <span className="text-gray-400">•</span>
-                                    <span>Updates every 5 minutes</span>
+
+                        <div className="glass-header px-8 py-4 border-t-2 border-slate-200">
+                            <div className="flex justify-between items-center text-sm">
+                                <div className="font-bold text-slate-500 flex items-center gap-2">
+                                    <Icons.Sync className="w-4 h-4" />
+                                    Auto-refresh every 5 minutes
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <i className="far fa-clock text-purple-600"></i>
-                                    <span className="font-medium">Last updated:</span>
-                                    <span className="font-mono">{currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                <div className="font-bold text-slate-600 flex items-center gap-2">
+                                    <Icons.Clock className="w-4 h-4" />
+                                    Last updated: {currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     {/* Footer */}
-                    <footer className="mt-8 text-center text-white text-opacity-90 text-sm space-y-2">
-                        <div className="glass-card px-6 py-4 inline-block">
-                            <p className="flex items-center gap-2 justify-center mb-2">
-                                <i className="fas fa-shield-alt"></i>
-                                <span className="font-semibold">Aircraft Fleet Dashboard v3.0</span>
-                                <span className="text-white text-opacity-60">•</span>
-                                <span className="text-white text-opacity-80">For operational use only</span>
+                    <footer className="mt-8 text-center">
+                        <div className="glass-card inline-block px-8 py-4 rounded-2xl">
+                            <p className="text-sm font-bold text-slate-600 flex items-center gap-2 justify-center mb-1">
+                                <Icons.Shield className="w-4 h-4 text-blue-600" />
+                                Fleet Command Dashboard v3.5
+                                <span className="text-slate-400">•</span>
+                                <span className="text-slate-500">Operational Use Only</span>
                             </p>
-                            <p className="text-xs text-white text-opacity-70">
-                                <i className="fas fa-database mr-1"></i>
-                                To connect to Google Sheets, update the SHEET_URL in the code
+                            <p className="text-xs text-slate-400 font-semibold">
+                                Connected to Google Sheets • Real-time Data Sync Active
                             </p>
                         </div>
                     </footer>
