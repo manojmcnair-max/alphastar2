@@ -262,15 +262,19 @@
                 submitBtn.textContent = '⏳ Saving to Sheet...';
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
+                
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(data)
                 });
                 
-                // Success!
-                closeModal();
+                // ADD THESE LINES:
+const result = await response.json();
+console.log('Response:', result);
+
+if (result.success) {
+    closeModal()
                 showAlert(`Work Order ${wo.woNumber} completed successfully! Refreshing data...`, 'success');
                 
                 // Reload data after a short delay
