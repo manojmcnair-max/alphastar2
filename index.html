@@ -4,254 +4,578 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aircraft Work Order System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #0a4d8c;
-            --accent: #ff6b35;
-            --success: #00a86b;
-            --warning: #ffa500;
-            --danger: #dc3545;
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #e5e7eb;
+            --surface: #ffffff;
+            --bg: #f9fafb;
+            --text: #111827;
+            --text-muted: #6b7280;
         }
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Rajdhani', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-            min-height: 100vh;
-        }
-        .header {
-            background: linear-gradient(135deg, var(--primary) 0%, #063a6a 100%);
-            color: white;
-            padding: 1.5rem 2rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .container { max-width: 2000px; margin: 0 auto; padding: 2rem; }
-        .btn { padding: 0.6rem 1.4rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        
-        .filters {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 1.5rem;
-        }
-        
-        .filter-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .filter-group label {
-            font-weight: 600;
-            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
             color: var(--text);
-        }
-        
-        .filter-buttons {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .info-banner {
-            background: #e3f2fd;
-            border-left: 4px solid var(--primary);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            color: #1565c0;
-        }
-        
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; margin-top: 1rem; }
-        th { background: var(--primary); color: white; padding: 0.8rem; text-align: left; font-size: 0.85rem; }
-        td { padding: 0.8rem; border-bottom: 1px solid #e1e8ed; font-size: 0.85rem; vertical-align: top; }
-        tr:hover { background: #f0f4f8; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; }
-        .modal.active { display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: white; border-radius: 16px; padding: 2rem; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; }
-        input, select, textarea { width: 100%; padding: 0.75rem; border: 2px solid #e1e8ed; border-radius: 6px; margin-top: 0.5rem; font-family: 'Rajdhani', sans-serif; }
-        .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-        .alert-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
-        .alert-error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-        .loading { text-align: center; padding: 2rem; color: #666; }
-        .status-pending { color: var(--warning); font-weight: bold; }
-        .status-completed { color: var(--success); font-weight: bold; }
-        
-        .due-cell {
-            font-family: 'IBM Plex Mono', monospace;
-            white-space: pre-wrap;
             line-height: 1.5;
         }
         
-        .due-badge {
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            margin-right: 0.3rem;
-            text-transform: uppercase;
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e3a8a 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
-        .badge-afh { background: #2563eb; color: white; }
-        .badge-afl { background: #7c3aed; color: white; }
-        .remaining-critical { color: var(--danger); font-weight: bold; }
-        .remaining-warning { color: var(--warning); font-weight: bold; }
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         
+        .header h1 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.25rem;
+        }
+        
+        /* Compact Stats */
         .stats {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             margin-bottom: 1rem;
-            flex-wrap: wrap;
         }
         
-        .stat-card {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .stat {
             flex: 1;
-            min-width: 150px;
-            border-left: 4px solid var(--primary);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+        
+        .stat-icon.pending { background: #fef3c7; }
+        .stat-icon.today { background: #d1fae5; }
+        .stat-icon.total { background: #dbeafe; }
+        
+        .stat-info {
+            flex: 1;
         }
         
         .stat-label {
-            font-size: 0.8rem;
-            color: #666;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
         
         .stat-value {
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: var(--primary);
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Compact Filter Panel */
+        .filter-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.375rem;
+            margin-bottom: 0.75rem;
+            background: var(--bg);
+            padding: 0.25rem;
+            border-radius: 6px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 0.625rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .filter label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8125rem;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        input[type="date"] {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+        
+        .date-range {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .date-range input {
+            flex: 1;
+        }
+        
+        .date-sep {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-light);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+        }
+        
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Compact Table */
+        .table-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: var(--bg);
+            padding: 0.625rem;
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        td {
+            padding: 0.625rem;
+            font-size: 0.8125rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        
+        tbody tr:hover {
+            background: var(--bg);
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.1875rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .badge-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .due-badge {
+            display: inline-flex;
+            padding: 0.125rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            margin-right: 0.25rem;
+            text-transform: uppercase;
+        }
+        
+        .due-badge.afh {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .due-badge.afl {
+            background: #ede9fe;
+            color: #6b21a8;
+        }
+        
+        .due-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.5;
+        }
+        
+        .critical { color: var(--danger); font-weight: 600; }
+        .warning { color: var(--warning); font-weight: 600; }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active { display: flex; }
+        
+        .modal-content {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 1.25rem;
+            width: 90%;
+            max-width: 550px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .modal-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        
+        .close-btn:hover {
+            background: var(--bg);
+        }
+        
+        .wo-details {
+            background: var(--bg);
+            padding: 0.875rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.8125rem;
+            line-height: 1.6;
+        }
+        
+        .form-group {
+            margin-bottom: 0.875rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            margin-bottom: 0.375rem;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8125rem;
+            resize: vertical;
+            min-height: 70px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 0.625rem;
+            margin-top: 1rem;
+        }
+        
+        .form-actions .btn {
+            flex: 1;
+        }
+        
+        .alert {
+            padding: 0.625rem 0.875rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.8125rem;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        @media (max-width: 768px) {
+            .stats { flex-direction: column; }
+            .filters { flex-direction: column; }
+            .filter { min-width: 100%; }
+            table { font-size: 0.7rem; }
+            th, td { padding: 0.5rem; }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>✈ Aircraft Work Order Tracking</h1>
+        <div class="header-content">
+            <h1>✈ Aircraft Work Order System</h1>
+            <button class="btn btn-primary" onclick="loadFromSheet()" id="refreshBtn">🔄 Refresh</button>
+        </div>
     </div>
+    
     <div class="container">
         <div id="alertContainer"></div>
         
+        <!-- Stats -->
         <div class="stats">
-            <div class="stat-card">
-                <div class="stat-label">Pending Work Orders</div>
-                <div class="stat-value" id="statPending">0</div>
+            <div class="stat">
+                <div class="stat-icon pending">⏳</div>
+                <div class="stat-info">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value" id="statPending">0</div>
+                </div>
             </div>
-            <div class="stat-card" style="border-left-color: var(--success);">
-                <div class="stat-label">Today's Completions</div>
-                <div class="stat-value" id="statToday" style="color: var(--success);">0</div>
+            <div class="stat">
+                <div class="stat-icon today">✓</div>
+                <div class="stat-info">
+                    <div class="stat-label">Today</div>
+                    <div class="stat-value" id="statToday">0</div>
+                </div>
             </div>
-            <div class="stat-card" style="border-left-color: var(--accent);">
-                <div class="stat-label">Total Displayed</div>
-                <div class="stat-value" id="statTotal" style="color: var(--accent);">0</div>
+            <div class="stat">
+                <div class="stat-icon total">📊</div>
+                <div class="stat-info">
+                    <div class="stat-label">Shown</div>
+                    <div class="stat-value" id="statTotal">0</div>
+                </div>
             </div>
         </div>
         
-        <div class="info-banner">
-            <strong>Default View:</strong> Showing all pending work orders + today's completed work orders
-        </div>
-        
-        <div class="filters">
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label for="viewMode">View Mode</label>
-                    <select id="viewMode" onchange="applyFilters()">
-                        <option value="default">Default (Pending + Today's Completed)</option>
-                        <option value="pending">Pending Only</option>
-                        <option value="completed">Search Completed</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="aircraftFilter">Filter by Aircraft</label>
-                    <select id="aircraftFilter" onchange="applyFilters()">
-                        <option value="">All Aircraft</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="woSearch">Search W/O Number</label>
-                    <input type="text" id="woSearch" placeholder="Enter W/O number..." oninput="applyFilters()">
-                </div>
+        <!-- Filters -->
+        <div class="filter-panel">
+            <div class="tabs">
+                <button class="tab active" onclick="setMode('default')" id="tabDefault">Daily View</button>
+                <button class="tab" onclick="setMode('pending')" id="tabPending">Pending</button>
+                <button class="tab" onclick="setMode('completed')" id="tabCompleted">History</button>
             </div>
             
-            <div id="dateFilterSection" style="display: none;">
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label for="dateFrom">From Date</label>
+            <div class="filters">
+                <div class="filter">
+                    <label>Aircraft</label>
+                    <select id="aircraftFilter" onchange="applyFilters()">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                
+                <div class="filter">
+                    <label>W/O Number</label>
+                    <input type="text" id="woSearch" placeholder="Search..." oninput="applyFilters()">
+                </div>
+                
+                <div class="filter" id="dateFilter" style="display:none; flex: 2;">
+                    <label>Date Range</label>
+                    <div class="date-range">
                         <input type="date" id="dateFrom" onchange="applyFilters()">
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="dateTo">To Date</label>
+                        <span class="date-sep">→</span>
                         <input type="date" id="dateTo" onchange="applyFilters()">
                     </div>
                 </div>
-            </div>
-            
-            <div class="filter-buttons">
-                <button class="btn btn-primary" onclick="loadFromSheet()">🔄 Refresh Data</button>
-                <button class="btn btn-secondary" onclick="resetFilters()">Reset Filters</button>
+                
+                <div class="filter" style="flex: 0 0 auto;">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+                </div>
             </div>
         </div>
         
-        <table id="workOrderTable">
-            <thead>
-                <tr>
-                    <th style="width: 80px;">Status</th>
-                    <th style="width: 100px;">Aircraft</th>
-                    <th style="width: 140px;">W/O Number</th>
-                    <th style="width: 300px;">Description</th>
-                    <th style="width: 180px;">Due Date / AFH / AFL</th>
-                    <th style="width: 150px;">Remarks</th>
-                    <th style="width: 200px;">Action Plan</th>
-                    <th style="width: 120px;">Completed By</th>
-                    <th style="width: 100px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <tr>
-                    <td colspan="9" class="loading">Loading work orders...</td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- Table -->
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:80px">Status</th>
+                        <th style="width:80px">Aircraft</th>
+                        <th style="width:120px">W/O Number</th>
+                        <th style="width:260px">Description</th>
+                        <th style="width:140px">Due Info</th>
+                        <th style="width:110px">Remarks</th>
+                        <th style="width:160px">Action Plan</th>
+                        <th style="width:100px">Completed</th>
+                        <th style="width:85px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
     
-    <div id="completeModal" class="modal">
+    <!-- Modal -->
+    <div id="modal" class="modal">
         <div class="modal-content">
-            <h2>Complete Work Order</h2>
-            <div id="woDetails" style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;"></div>
-            <form id="completeForm" onsubmit="completeWorkOrder(event)">
+            <div class="modal-header">
+                <h2 class="modal-title">Complete Work Order</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            
+            <div class="wo-details" id="woDetails"></div>
+            
+            <form onsubmit="completeWO(event)">
                 <input type="hidden" id="completeIndex">
-                <label>Your Name *</label>
-                <input type="text" id="technicianName" required placeholder="Enter your full name">
-                <label>Logbook PDF *</label>
-                <input type="file" id="logbookFile" accept=".pdf" required>
-                <small style="color: #666; display: block; margin-top: 0.25rem;">Max file size: 50MB</small>
-                <label>Notes (Optional)</label>
-                <textarea id="completionNotes" rows="3" placeholder="Add any completion notes..."></textarea>
-                <br><br>
-                <button type="submit" class="btn btn-success" id="submitBtn">✓ Mark Complete</button>
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                
+                <div class="form-group">
+                    <label>Your Name *</label>
+                    <input type="text" id="techName" required placeholder="Full name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Logbook PDF *</label>
+                    <input type="file" id="logbookFile" accept=".pdf" required>
+                    <small style="color:var(--text-muted);font-size:0.7rem;display:block;margin-top:0.25rem">Max 50MB</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="notes" placeholder="Optional notes..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="submitBtn">✓ Complete</button>
+                </div>
             </form>
         </div>
     </div>
@@ -260,387 +584,263 @@
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=1269716757&single=true&output=csv';
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzD2JKdxqgMuHsu-CvuzfbKzZXe8ryJBOC_mpN9vNdwpG3M702k3_2msUo7s2VrDzcC/exec';
         
-        let allWorkOrders = [];
-        let displayedWorkOrders = [];
+        let allWOs = [], displayedWOs = [], mode = 'default';
         
         async function loadFromSheet() {
-            const refreshBtn = document.querySelector('.btn-primary');
-            refreshBtn.disabled = true;
-            refreshBtn.textContent = '⏳ Loading...';
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Loading...';
             
             try {
-                const response = await fetch(SHEET_URL);
-                const csv = await response.text();
-                allWorkOrders = parseCSV(csv);
-                populateAircraftFilter();
-                setDefaultDates();
+                const res = await fetch(SHEET_URL);
+                const csv = await res.text();
+                allWOs = parseCSV(csv);
+                populateAircraft();
+                setDates();
                 applyFilters();
-                showAlert('Data loaded successfully! Found ' + allWorkOrders.length + ' work orders.', 'success');
-            } catch (error) {
-                console.error('Error loading sheet:', error);
-                showAlert('Failed to load data: ' + error.message, 'error');
+                showAlert('✓ Data loaded', 'success');
+            } catch(e) {
+                showAlert('✗ Load failed', 'error');
             } finally {
-                refreshBtn.disabled = false;
-                refreshBtn.textContent = '🔄 Refresh Data';
+                btn.disabled = false;
+                btn.textContent = '🔄 Refresh';
             }
         }
         
         function parseCSV(csv) {
-            const rows = [];
-            let currentRow = [];
-            let currentField = '';
-            let insideQuotes = false;
+            const rows = [], orders = [];
+            let row = [], field = '', inQuotes = false;
             
             for (let i = 0; i < csv.length; i++) {
-                const char = csv[i];
-                const nextChar = csv[i + 1];
-                
-                if (char === '"') {
-                    if (insideQuotes && nextChar === '"') {
-                        currentField += '"';
-                        i++;
-                    } else {
-                        insideQuotes = !insideQuotes;
-                    }
-                } else if (char === ',' && !insideQuotes) {
-                    currentRow.push(currentField);
-                    currentField = '';
-                } else if (char === '\n' && !insideQuotes) {
-                    currentRow.push(currentField);
-                    if (currentRow.length > 0 && currentRow[0]) {
-                        rows.push(currentRow);
-                    }
-                    currentRow = [];
-                    currentField = '';
-                } else {
-                    currentField += char;
-                }
+                const c = csv[i], n = csv[i+1];
+                if (c === '"') {
+                    if (inQuotes && n === '"') { field += '"'; i++; }
+                    else inQuotes = !inQuotes;
+                } else if (c === ',' && !inQuotes) {
+                    row.push(field); field = '';
+                } else if (c === '\n' && !inQuotes) {
+                    row.push(field);
+                    if (row[0]) rows.push(row);
+                    row = []; field = '';
+                } else field += c;
             }
+            if (field || row.length) { row.push(field); if (row[0]) rows.push(row); }
             
-            if (currentField || currentRow.length > 0) {
-                currentRow.push(currentField);
-                if (currentRow.length > 0 && currentRow[0]) {
-                    rows.push(currentRow);
-                }
-            }
-            
-            const orders = [];
             for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
-                if (row.length < 4) continue;
-                
+                const r = rows[i];
+                if (r.length < 4) continue;
                 orders.push({
-                    aircraft: (row[0] || '').trim(),
-                    woNumber: (row[1] || '').trim(),
-                    description: (row[2] || '').trim(),
-                    dueDate: (row[3] || '').trim(),
-                    remarks: (row[4] || '').trim(),
-                    actionPlan: (row[5] || '').trim(),
-                    status: (row[6] || 'Pending').trim(),
-                    completedBy: (row[7] || '').trim(),
-                    completedDate: (row[8] || '').trim(),
-                    logbookUrl: (row[9] || '').trim(),
-                    completionNotes: (row[10] || '').trim()
+                    aircraft: (r[0]||'').trim(),
+                    woNumber: (r[1]||'').trim(),
+                    description: (r[2]||'').trim(),
+                    dueDate: (r[3]||'').trim(),
+                    remarks: (r[4]||'').trim(),
+                    actionPlan: (r[5]||'').trim(),
+                    status: (r[6]||'Pending').trim(),
+                    completedBy: (r[7]||'').trim(),
+                    completedDate: (r[8]||'').trim(),
+                    logbookUrl: (r[9]||'').trim(),
+                    completionNotes: (r[10]||'').trim()
                 });
             }
-            
             return orders;
         }
         
-        function setDefaultDates() {
-            const today = new Date();
-            const oneMonthAgo = new Date(today);
-            oneMonthAgo.setMonth(today.getMonth() - 1);
-            
-            document.getElementById('dateFrom').value = oneMonthAgo.toISOString().split('T')[0];
+        function setMode(m) {
+            mode = m;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab'+m.charAt(0).toUpperCase()+m.slice(1)).classList.add('active');
+            document.getElementById('dateFilter').style.display = m === 'completed' ? 'block' : 'none';
+            applyFilters();
+        }
+        
+        function setDates() {
+            const today = new Date(), month = new Date(today);
+            month.setMonth(today.getMonth() - 1);
+            document.getElementById('dateFrom').value = month.toISOString().split('T')[0];
             document.getElementById('dateTo').value = today.toISOString().split('T')[0];
         }
         
-        function populateAircraftFilter() {
-            const aircraftSet = new Set(allWorkOrders.map(wo => wo.aircraft).filter(a => a));
-            const select = document.getElementById('aircraftFilter');
-            const currentValue = select.value;
-            
-            select.innerHTML = '<option value="">All Aircraft</option>' +
-                Array.from(aircraftSet).sort().map(aircraft => 
-                    `<option value="${aircraft}">${aircraft}</option>`
-                ).join('');
-            
-            select.value = currentValue;
+        function populateAircraft() {
+            const aircraft = [...new Set(allWOs.map(w => w.aircraft).filter(a => a))].sort();
+            document.getElementById('aircraftFilter').innerHTML = '<option value="">All</option>' +
+                aircraft.map(a => `<option value="${a}">${a}</option>`).join('');
         }
         
         function applyFilters() {
-            const viewMode = document.getElementById('viewMode').value;
-            const aircraftFilter = document.getElementById('aircraftFilter').value;
-            const woSearch = document.getElementById('woSearch').value.toLowerCase();
-            const dateFrom = document.getElementById('dateFrom').value;
-            const dateTo = document.getElementById('dateTo').value;
-            
-            // Show/hide date filter section
-            document.getElementById('dateFilterSection').style.display = 
-                viewMode === 'completed' ? 'block' : 'none';
-            
+            const aircraft = document.getElementById('aircraftFilter').value;
+            const search = document.getElementById('woSearch').value.toLowerCase();
+            const from = document.getElementById('dateFrom').value;
+            const to = document.getElementById('dateTo').value;
             const today = new Date().toISOString().split('T')[0];
             
-            displayedWorkOrders = allWorkOrders.filter(wo => {
-                // Aircraft filter
-                if (aircraftFilter && wo.aircraft !== aircraftFilter) return false;
+            displayedWOs = allWOs.filter(w => {
+                if (aircraft && w.aircraft !== aircraft) return false;
+                if (search && !w.woNumber.toLowerCase().includes(search)) return false;
                 
-                // W/O search
-                if (woSearch && !wo.woNumber.toLowerCase().includes(woSearch)) return false;
-                
-                // View mode filter
-                if (viewMode === 'default') {
-                    // Show pending + today's completed
-                    return wo.status === 'Pending' || 
-                           (wo.status === 'Completed' && wo.completedDate === today);
-                } else if (viewMode === 'pending') {
-                    return wo.status === 'Pending';
-                } else if (viewMode === 'completed') {
-                    // Show completed within date range
-                    if (wo.status !== 'Completed') return false;
-                    if (!wo.completedDate) return false;
-                    
-                    if (dateFrom && wo.completedDate < dateFrom) return false;
-                    if (dateTo && wo.completedDate > dateTo) return false;
-                    
+                if (mode === 'default') {
+                    return w.status === 'Pending' || (w.status === 'Completed' && w.completedDate === today);
+                } else if (mode === 'pending') {
+                    return w.status === 'Pending';
+                } else {
+                    if (w.status !== 'Completed' || !w.completedDate) return false;
+                    if (from && w.completedDate < from) return false;
+                    if (to && w.completedDate > to) return false;
                     return true;
                 }
-                
-                return true;
             });
             
             updateStats();
-            renderTable();
+            render();
         }
         
         function resetFilters() {
-            document.getElementById('viewMode').value = 'default';
             document.getElementById('aircraftFilter').value = '';
             document.getElementById('woSearch').value = '';
-            setDefaultDates();
-            applyFilters();
+            setDates();
+            setMode('default');
         }
         
         function updateStats() {
             const today = new Date().toISOString().split('T')[0];
-            const pending = allWorkOrders.filter(wo => wo.status === 'Pending').length;
-            const todayCompleted = allWorkOrders.filter(wo => 
-                wo.status === 'Completed' && wo.completedDate === today
-            ).length;
-            
-            document.getElementById('statPending').textContent = pending;
-            document.getElementById('statToday').textContent = todayCompleted;
-            document.getElementById('statTotal').textContent = displayedWorkOrders.length;
+            document.getElementById('statPending').textContent = allWOs.filter(w => w.status === 'Pending').length;
+            document.getElementById('statToday').textContent = allWOs.filter(w => w.status === 'Completed' && w.completedDate === today).length;
+            document.getElementById('statTotal').textContent = displayedWOs.length;
         }
         
-        function formatDueDate(dueDate) {
-            if (!dueDate) return '-';
-            
-            let html = '<div class="due-cell">';
-            
-            const afhMatch = dueDate.match(/(\d+):(\d+)\s*(?:AFH)?/i);
-            if (afhMatch) {
-                html += `<div><span class="due-badge badge-afh">AFH</span>${afhMatch[1]}:${afhMatch[2]} hrs</div>`;
-            }
-            
-            const aflMatch = dueDate.match(/(\d+)\s*\(?\s*(AFL|AFC)\s*\)?/i);
-            if (aflMatch) {
-                html += `<div><span class="due-badge badge-afl">AFL</span>${aflMatch[1]} cycles</div>`;
-            }
-            
-            const dateMatch = dueDate.match(/(\d{4}-\d{2}-\d{2})|(\d{1,2}-[A-Za-z]{3}-\d{2,4})/);
-            if (dateMatch && !afhMatch && !aflMatch) {
-                html += `<div>${dateMatch[0]}</div>`;
-            }
-            
-            if (!afhMatch && !aflMatch && !dateMatch) {
-                html += dueDate;
-            }
-            
-            html += '</div>';
-            return html;
+        function formatDue(due) {
+            if (!due) return '-';
+            let h = '<div class="due-cell">';
+            const afh = due.match(/(\d+):(\d+)/);
+            if (afh) h += `<div><span class="due-badge afh">AFH</span>${afh[0]}</div>`;
+            const afl = due.match(/(\d+)\s*\(?\s*(AFL|AFC)\s*\)?/i);
+            if (afl) h += `<div><span class="due-badge afl">AFL</span>${afl[1]}</div>`;
+            const date = due.match(/\d{4}-\d{2}-\d{2}/);
+            if (date && !afh && !afl) h += date[0];
+            if (!afh && !afl && !date) h += due;
+            return h + '</div>';
         }
         
-        function formatActionPlan(actionPlan) {
-            if (!actionPlan || actionPlan === 'NIL') return '-';
-            
-            let html = '<div class="due-cell">';
-            
-            const afhRemMatch = actionPlan.match(/(\d+)\s+AFH\s+REMAINING/i);
-            if (afhRemMatch) {
-                const hours = parseInt(afhRemMatch[1]);
-                const className = hours <= 10 ? 'remaining-critical' : hours <= 30 ? 'remaining-warning' : '';
-                html += `<div class="${className}">${hours} AFH rem.</div>`;
+        function formatAction(action) {
+            if (!action || action === 'NIL') return '-';
+            let h = '<div class="due-cell">';
+            const ahfRem = action.match(/(\d+)\s+AFH\s+REMAINING/i);
+            if (ahfRem) {
+                const n = parseInt(ahfRem[1]);
+                h += `<div class="${n<=10?'critical':n<=30?'warning':''}">${n} AFH rem.</div>`;
             }
-            
-            const aflRemMatch = actionPlan.match(/(\d+)\s+AF[CL]\s+REMAINING/i);
-            if (aflRemMatch) {
-                const cycles = parseInt(aflRemMatch[1]);
-                const className = cycles <= 5 ? 'remaining-critical' : cycles <= 15 ? 'remaining-warning' : '';
-                html += `<div class="${className}">${cycles} AFL rem.</div>`;
+            const aflRem = action.match(/(\d+)\s+AF[CL]\s+REMAINING/i);
+            if (aflRem) {
+                const n = parseInt(aflRem[1]);
+                h += `<div class="${n<=5?'critical':n<=15?'warning':''}">${n} AFL rem.</div>`;
             }
-            
-            const asOfMatch = actionPlan.match(/AS\s+OF\s+(\d{1,2}-[A-Za-z]{3}-\d{2,4})/i);
-            if (asOfMatch) {
-                html += `<div style="font-size: 0.75rem; color: #666; font-style: italic;">as of ${asOfMatch[1]}</div>`;
-            }
-            
-            if (!afhRemMatch && !aflRemMatch) {
-                html += actionPlan;
-            }
-            
-            html += '</div>';
-            return html;
+            const asOf = action.match(/AS\s+OF\s+(\d{1,2}-[A-Za-z]{3}-\d{2,4})/i);
+            if (asOf) h += `<div style="font-size:0.65rem;color:var(--text-muted);margin-top:0.25rem">${asOf[0]}</div>`;
+            if (!ahfRem && !aflRem) h += action;
+            return h + '</div>';
         }
         
-        function renderTable() {
+        function render() {
             const tbody = document.getElementById('tableBody');
-            
-            if (displayedWorkOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem;">No work orders found matching the current filters</td></tr>';
+            if (!displayedWOs.length) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">No work orders match filters</td></tr>';
                 return;
             }
-            
-            tbody.innerHTML = displayedWorkOrders.map((wo, i) => `
+            tbody.innerHTML = displayedWOs.map(w => `
                 <tr>
-                    <td><span class="status-${wo.status.toLowerCase()}">${wo.status}</span></td>
-                    <td><strong>${wo.aircraft}</strong></td>
-                    <td style="font-size: 0.8rem;">${wo.woNumber}</td>
-                    <td style="font-size: 0.8rem;">${wo.description}</td>
-                    <td>${formatDueDate(wo.dueDate)}</td>
-                    <td style="font-size: 0.8rem;">${wo.remarks || '-'}</td>
-                    <td>${formatActionPlan(wo.actionPlan)}</td>
-                    <td style="font-size: 0.8rem;">
-                        ${wo.completedBy || '-'}
-                        ${wo.completedDate ? '<br><small>' + wo.completedDate + '</small>' : ''}
-                    </td>
-                    <td>
-                        ${wo.status !== 'Completed' ? 
-                            `<button class="btn btn-success" onclick="openModal(${allWorkOrders.indexOf(wo)})" style="font-size: 0.8rem; padding: 0.5rem;">Complete</button>` :
-                            wo.logbookUrl ? `<a href="${wo.logbookUrl}" target="_blank" class="btn btn-primary" style="text-decoration: none; display: inline-block; font-size: 0.8rem; padding: 0.5rem;">📄 PDF</a>` : 'Done'
-                        }
-                    </td>
+                    <td><span class="badge badge-${w.status.toLowerCase()}">${w.status==='Completed'?'✓':'○'} ${w.status}</span></td>
+                    <td><strong>${w.aircraft}</strong></td>
+                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.7rem">${w.woNumber}</td>
+                    <td>${w.description}</td>
+                    <td>${formatDue(w.dueDate)}</td>
+                    <td style="font-size:0.7rem">${w.remarks||'-'}</td>
+                    <td>${formatAction(w.actionPlan)}</td>
+                    <td style="font-size:0.7rem">${w.completedBy||'-'}${w.completedDate?'<br><span style="color:var(--text-muted)">'+w.completedDate+'</span>':''}</td>
+                    <td>${w.status!=='Completed'?`<button class="btn btn-success" onclick="openModal(${allWOs.indexOf(w)})">Complete</button>`:w.logbookUrl?`<a href="${w.logbookUrl}" target="_blank" class="btn btn-primary" style="text-decoration:none;font-size:0.7rem;padding:0.3rem 0.6rem">📄 PDF</a>`:'Done'}</td>
                 </tr>
             `).join('');
         }
         
         function openModal(i) {
-            const wo = allWorkOrders[i];
+            const w = allWOs[i];
             document.getElementById('completeIndex').value = i;
-            
-            document.getElementById('woDetails').innerHTML = `
-                <strong>Aircraft:</strong> ${wo.aircraft}<br>
-                <strong>W/O Number:</strong> ${wo.woNumber}<br>
-                <strong>Description:</strong> ${wo.description}<br>
-                <strong>Due:</strong> ${wo.dueDate}<br>
-                ${wo.actionPlan && wo.actionPlan !== 'NIL' ? '<strong>Action Plan:</strong> ' + wo.actionPlan + '<br>' : ''}
-            `;
-            
-            document.getElementById('completeModal').classList.add('active');
+            document.getElementById('woDetails').innerHTML = `<strong>Aircraft:</strong> ${w.aircraft}<br><strong>W/O:</strong> ${w.woNumber}<br><strong>Description:</strong> ${w.description}<br><strong>Due:</strong> ${w.dueDate}`;
+            document.getElementById('modal').classList.add('active');
         }
         
         function closeModal() {
-            document.getElementById('completeModal').classList.remove('active');
-            document.getElementById('completeForm').reset();
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('techName').value = '';
+            document.getElementById('logbookFile').value = '';
+            document.getElementById('notes').value = '';
         }
         
-        async function completeWorkOrder(e) {
+        async function completeWO(e) {
             e.preventDefault();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Uploading...';
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Saving...';
             
             const i = document.getElementById('completeIndex').value;
-            const wo = allWorkOrders[i];
-            const name = document.getElementById('technicianName').value;
+            const w = allWOs[i];
+            const name = document.getElementById('techName').value;
             const file = document.getElementById('logbookFile').files[0];
-            const notes = document.getElementById('completionNotes').value;
+            const notes = document.getElementById('notes').value;
             
-            if (file.size > 50 * 1024 * 1024) {
-                showAlert('File too large! Maximum size is 50MB.', 'error');
-                submitBtn.disabled = false;
-                submitBtn.textContent = '✓ Mark Complete';
+            if (file.size > 50*1024*1024) {
+                showAlert('File too large', 'error');
+                btn.disabled = false;
+                btn.textContent = '✓ Complete';
                 return;
             }
             
             try {
-                const base64 = await fileToBase64(file);
-                
-                const data = {
-                    aircraft: wo.aircraft,
-                    woNumber: wo.woNumber,
-                    status: 'Completed',
-                    completedBy: name,
-                    completedDate: new Date().toISOString().split('T')[0],
-                    logbookBase64: base64,
-                    completionNotes: notes
-                };
-                
-                submitBtn.textContent = '⏳ Saving...';
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(data)
+                const base64 = await new Promise((res, rej) => {
+                    const r = new FileReader();
+                    r.onload = () => res(r.result);
+                    r.onerror = rej;
+                    r.readAsDataURL(file);
                 });
                 
-                const result = await response.json();
+                const resp = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+                    body: JSON.stringify({
+                        aircraft: w.aircraft,
+                        woNumber: w.woNumber,
+                        status: 'Completed',
+                        completedBy: name,
+                        completedDate: new Date().toISOString().split('T')[0],
+                        logbookBase64: base64,
+                        completionNotes: notes
+                    })
+                });
                 
+                const result = await resp.json();
                 if (result.success) {
                     closeModal();
-                    showAlert(`Work Order ${wo.woNumber} completed successfully!`, 'success');
-                    setTimeout(() => loadFromSheet(), 2000);
-                } else {
-                    throw new Error(result.error || 'Failed to complete work order');
-                }
-                
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error: ' + error.message, 'error');
+                    showAlert(`✓ ${w.woNumber} completed`, 'success');
+                    setTimeout(loadFromSheet, 2000);
+                } else throw new Error(result.error||'Failed');
+            } catch(err) {
+                showAlert('✗ '+err.message, 'error');
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = '✓ Mark Complete';
+                btn.disabled = false;
+                btn.textContent = '✓ Complete';
             }
         }
         
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-        
-        function showAlert(message, type) {
-            const container = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.textContent = message;
-            container.appendChild(alert);
-            
+        function showAlert(msg, type) {
+            const div = document.createElement('div');
+            div.className = `alert alert-${type}`;
+            div.textContent = msg;
+            document.getElementById('alertContainer').appendChild(div);
             setTimeout(() => {
-                alert.style.opacity = '0';
-                alert.style.transition = 'opacity 0.5s';
-                setTimeout(() => alert.remove(), 500);
-            }, 5000);
+                div.style.opacity = '0';
+                div.style.transition = 'opacity 0.3s';
+                setTimeout(() => div.remove(), 300);
+            }, 3500);
         }
-        
-        // Toggle view mode when select changes
-        document.getElementById('viewMode').addEventListener('change', function() {
-            const mode = this.value;
-            if (mode === 'completed') {
-                document.querySelector('.info-banner').innerHTML = 
-                    '<strong>Search Mode:</strong> Use filters to search completed work orders by aircraft, W/O number, or date range (max 1 month)';
-            } else if (mode === 'pending') {
-                document.querySelector('.info-banner').innerHTML = 
-                    '<strong>Pending Only:</strong> Showing all pending work orders';
-            } else {
-                document.querySelector('.info-banner').innerHTML = 
-                    '<strong>Default View:</strong> Showing all pending work orders + today\'s completed work orders';
-            }
-        });
         
         loadFromSheet();
     </script>
