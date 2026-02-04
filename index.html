@@ -26,10 +26,56 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         .container { max-width: 2000px; margin: 0 auto; padding: 2rem; }
-        .btn { padding: 0.6rem 1.4rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn { padding: 0.6rem 1.4rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-success { background: var(--success); color: white; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .info-banner {
+            background: #e3f2fd;
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #1565c0;
+        }
+        
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; margin-top: 1rem; }
         th { background: var(--primary); color: white; padding: 0.8rem; text-align: left; font-size: 0.85rem; }
         td { padding: 0.8rem; border-bottom: 1px solid #e1e8ed; font-size: 0.85rem; vertical-align: top; }
@@ -37,7 +83,7 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; }
         .modal.active { display: flex; align-items: center; justify-content: center; }
         .modal-content { background: white; border-radius: 16px; padding: 2rem; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; }
-        input, select, textarea { width: 100%; padding: 0.75rem; border: 2px solid #e1e8ed; border-radius: 6px; margin-top: 0.5rem; }
+        input, select, textarea { width: 100%; padding: 0.75rem; border: 2px solid #e1e8ed; border-radius: 6px; margin-top: 0.5rem; font-family: 'Rajdhani', sans-serif; }
         .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
         .alert-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
         .alert-error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
@@ -61,18 +107,41 @@
             text-transform: uppercase;
         }
         
-        .badge-afh {
-            background: #2563eb;
-            color: white;
-        }
-        
-        .badge-afl {
-            background: #7c3aed;
-            color: white;
-        }
-        
+        .badge-afh { background: #2563eb; color: white; }
+        .badge-afl { background: #7c3aed; color: white; }
         .remaining-critical { color: var(--danger); font-weight: bold; }
         .remaining-warning { color: var(--warning); font-weight: bold; }
+        
+        .stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 150px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'IBM Plex Mono', monospace;
+        }
     </style>
 </head>
 <body>
@@ -81,7 +150,69 @@
     </div>
     <div class="container">
         <div id="alertContainer"></div>
-        <button class="btn btn-primary" onclick="loadFromSheet()" id="refreshBtn">🔄 Refresh from Sheet</button>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Pending Work Orders</div>
+                <div class="stat-value" id="statPending">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--success);">
+                <div class="stat-label">Today's Completions</div>
+                <div class="stat-value" id="statToday" style="color: var(--success);">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--accent);">
+                <div class="stat-label">Total Displayed</div>
+                <div class="stat-value" id="statTotal" style="color: var(--accent);">0</div>
+            </div>
+        </div>
+        
+        <div class="info-banner">
+            <strong>Default View:</strong> Showing all pending work orders + today's completed work orders
+        </div>
+        
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="viewMode">View Mode</label>
+                    <select id="viewMode" onchange="applyFilters()">
+                        <option value="default">Default (Pending + Today's Completed)</option>
+                        <option value="pending">Pending Only</option>
+                        <option value="completed">Search Completed</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="aircraftFilter">Filter by Aircraft</label>
+                    <select id="aircraftFilter" onchange="applyFilters()">
+                        <option value="">All Aircraft</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="woSearch">Search W/O Number</label>
+                    <input type="text" id="woSearch" placeholder="Enter W/O number..." oninput="applyFilters()">
+                </div>
+            </div>
+            
+            <div id="dateFilterSection" style="display: none;">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="dateFrom">From Date</label>
+                        <input type="date" id="dateFrom" onchange="applyFilters()">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="dateTo">To Date</label>
+                        <input type="date" id="dateTo" onchange="applyFilters()">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="filter-buttons">
+                <button class="btn btn-primary" onclick="loadFromSheet()">🔄 Refresh Data</button>
+                <button class="btn btn-secondary" onclick="resetFilters()">Reset Filters</button>
+            </div>
+        </div>
         
         <table id="workOrderTable">
             <thead>
@@ -120,7 +251,7 @@
                 <textarea id="completionNotes" rows="3" placeholder="Add any completion notes..."></textarea>
                 <br><br>
                 <button type="submit" class="btn btn-success" id="submitBtn">✓ Mark Complete</button>
-                <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
             </form>
         </div>
     </div>
@@ -129,36 +260,37 @@
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=1269716757&single=true&output=csv';
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzD2JKdxqgMuHsu-CvuzfbKzZXe8ryJBOC_mpN9vNdwpG3M702k3_2msUo7s2VrDzcC/exec';
         
-        let workOrders = [];
+        let allWorkOrders = [];
+        let displayedWorkOrders = [];
         
         async function loadFromSheet() {
-            const refreshBtn = document.getElementById('refreshBtn');
+            const refreshBtn = document.querySelector('.btn-primary');
             refreshBtn.disabled = true;
             refreshBtn.textContent = '⏳ Loading...';
             
             try {
                 const response = await fetch(SHEET_URL);
                 const csv = await response.text();
-                workOrders = parseCSV(csv);
-                renderTable();
-                showAlert('Data loaded successfully! Found ' + workOrders.length + ' work orders.', 'success');
+                allWorkOrders = parseCSV(csv);
+                populateAircraftFilter();
+                setDefaultDates();
+                applyFilters();
+                showAlert('Data loaded successfully! Found ' + allWorkOrders.length + ' work orders.', 'success');
             } catch (error) {
                 console.error('Error loading sheet:', error);
                 showAlert('Failed to load data: ' + error.message, 'error');
             } finally {
                 refreshBtn.disabled = false;
-                refreshBtn.textContent = '🔄 Refresh from Sheet';
+                refreshBtn.textContent = '🔄 Refresh Data';
             }
         }
         
         function parseCSV(csv) {
             const rows = [];
-            const lines = csv.split('\n');
             let currentRow = [];
             let currentField = '';
             let insideQuotes = false;
             
-            // Parse CSV properly handling quoted fields with newlines
             for (let i = 0; i < csv.length; i++) {
                 const char = csv[i];
                 const nextChar = csv[i + 1];
@@ -166,7 +298,7 @@
                 if (char === '"') {
                     if (insideQuotes && nextChar === '"') {
                         currentField += '"';
-                        i++; // Skip next quote
+                        i++;
                     } else {
                         insideQuotes = !insideQuotes;
                     }
@@ -185,7 +317,6 @@
                 }
             }
             
-            // Add last field and row
             if (currentField || currentRow.length > 0) {
                 currentRow.push(currentField);
                 if (currentRow.length > 0 && currentRow[0]) {
@@ -193,13 +324,10 @@
                 }
             }
             
-            console.log('Parsed rows:', rows.length);
-            
-            // Convert to work orders (skip header row)
             const orders = [];
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                if (row.length < 4) continue; // Need at least aircraft, wo, desc, due date
+                if (row.length < 4) continue;
                 
                 orders.push({
                     aircraft: (row[0] || '').trim(),
@@ -216,34 +344,116 @@
                 });
             }
             
-            console.log('Work orders:', orders);
             return orders;
         }
         
-        function formatDueDate(dueDate, actionPlan) {
+        function setDefaultDates() {
+            const today = new Date();
+            const oneMonthAgo = new Date(today);
+            oneMonthAgo.setMonth(today.getMonth() - 1);
+            
+            document.getElementById('dateFrom').value = oneMonthAgo.toISOString().split('T')[0];
+            document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+        }
+        
+        function populateAircraftFilter() {
+            const aircraftSet = new Set(allWorkOrders.map(wo => wo.aircraft).filter(a => a));
+            const select = document.getElementById('aircraftFilter');
+            const currentValue = select.value;
+            
+            select.innerHTML = '<option value="">All Aircraft</option>' +
+                Array.from(aircraftSet).sort().map(aircraft => 
+                    `<option value="${aircraft}">${aircraft}</option>`
+                ).join('');
+            
+            select.value = currentValue;
+        }
+        
+        function applyFilters() {
+            const viewMode = document.getElementById('viewMode').value;
+            const aircraftFilter = document.getElementById('aircraftFilter').value;
+            const woSearch = document.getElementById('woSearch').value.toLowerCase();
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            
+            // Show/hide date filter section
+            document.getElementById('dateFilterSection').style.display = 
+                viewMode === 'completed' ? 'block' : 'none';
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            displayedWorkOrders = allWorkOrders.filter(wo => {
+                // Aircraft filter
+                if (aircraftFilter && wo.aircraft !== aircraftFilter) return false;
+                
+                // W/O search
+                if (woSearch && !wo.woNumber.toLowerCase().includes(woSearch)) return false;
+                
+                // View mode filter
+                if (viewMode === 'default') {
+                    // Show pending + today's completed
+                    return wo.status === 'Pending' || 
+                           (wo.status === 'Completed' && wo.completedDate === today);
+                } else if (viewMode === 'pending') {
+                    return wo.status === 'Pending';
+                } else if (viewMode === 'completed') {
+                    // Show completed within date range
+                    if (wo.status !== 'Completed') return false;
+                    if (!wo.completedDate) return false;
+                    
+                    if (dateFrom && wo.completedDate < dateFrom) return false;
+                    if (dateTo && wo.completedDate > dateTo) return false;
+                    
+                    return true;
+                }
+                
+                return true;
+            });
+            
+            updateStats();
+            renderTable();
+        }
+        
+        function resetFilters() {
+            document.getElementById('viewMode').value = 'default';
+            document.getElementById('aircraftFilter').value = '';
+            document.getElementById('woSearch').value = '';
+            setDefaultDates();
+            applyFilters();
+        }
+        
+        function updateStats() {
+            const today = new Date().toISOString().split('T')[0];
+            const pending = allWorkOrders.filter(wo => wo.status === 'Pending').length;
+            const todayCompleted = allWorkOrders.filter(wo => 
+                wo.status === 'Completed' && wo.completedDate === today
+            ).length;
+            
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statToday').textContent = todayCompleted;
+            document.getElementById('statTotal').textContent = displayedWorkOrders.length;
+        }
+        
+        function formatDueDate(dueDate) {
             if (!dueDate) return '-';
             
             let html = '<div class="due-cell">';
             
-            // Check for AFH (hours) pattern
             const afhMatch = dueDate.match(/(\d+):(\d+)\s*(?:AFH)?/i);
             if (afhMatch) {
                 html += `<div><span class="due-badge badge-afh">AFH</span>${afhMatch[1]}:${afhMatch[2]} hrs</div>`;
             }
             
-            // Check for AFL/AFC (cycles) pattern
             const aflMatch = dueDate.match(/(\d+)\s*\(?\s*(AFL|AFC)\s*\)?/i);
             if (aflMatch) {
                 html += `<div><span class="due-badge badge-afl">AFL</span>${aflMatch[1]} cycles</div>`;
             }
             
-            // Check for regular date pattern (YYYY-MM-DD or DD-MMM-YY)
             const dateMatch = dueDate.match(/(\d{4}-\d{2}-\d{2})|(\d{1,2}-[A-Za-z]{3}-\d{2,4})/);
             if (dateMatch && !afhMatch && !aflMatch) {
                 html += `<div>${dateMatch[0]}</div>`;
             }
             
-            // If no patterns matched, show raw
             if (!afhMatch && !aflMatch && !dateMatch) {
                 html += dueDate;
             }
@@ -257,7 +467,6 @@
             
             let html = '<div class="due-cell">';
             
-            // Check for remaining hours
             const afhRemMatch = actionPlan.match(/(\d+)\s+AFH\s+REMAINING/i);
             if (afhRemMatch) {
                 const hours = parseInt(afhRemMatch[1]);
@@ -265,7 +474,6 @@
                 html += `<div class="${className}">${hours} AFH rem.</div>`;
             }
             
-            // Check for remaining cycles
             const aflRemMatch = actionPlan.match(/(\d+)\s+AF[CL]\s+REMAINING/i);
             if (aflRemMatch) {
                 const cycles = parseInt(aflRemMatch[1]);
@@ -273,13 +481,11 @@
                 html += `<div class="${className}">${cycles} AFL rem.</div>`;
             }
             
-            // Check for "AS OF" date
             const asOfMatch = actionPlan.match(/AS\s+OF\s+(\d{1,2}-[A-Za-z]{3}-\d{2,4})/i);
             if (asOfMatch) {
                 html += `<div style="font-size: 0.75rem; color: #666; font-style: italic;">as of ${asOfMatch[1]}</div>`;
             }
             
-            // If no patterns matched, show raw
             if (!afhRemMatch && !aflRemMatch) {
                 html += actionPlan;
             }
@@ -291,18 +497,18 @@
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             
-            if (workOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem;">No work orders found</td></tr>';
+            if (displayedWorkOrders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem;">No work orders found matching the current filters</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = workOrders.map((wo, i) => `
+            tbody.innerHTML = displayedWorkOrders.map((wo, i) => `
                 <tr>
                     <td><span class="status-${wo.status.toLowerCase()}">${wo.status}</span></td>
                     <td><strong>${wo.aircraft}</strong></td>
                     <td style="font-size: 0.8rem;">${wo.woNumber}</td>
                     <td style="font-size: 0.8rem;">${wo.description}</td>
-                    <td>${formatDueDate(wo.dueDate, wo.actionPlan)}</td>
+                    <td>${formatDueDate(wo.dueDate)}</td>
                     <td style="font-size: 0.8rem;">${wo.remarks || '-'}</td>
                     <td>${formatActionPlan(wo.actionPlan)}</td>
                     <td style="font-size: 0.8rem;">
@@ -311,7 +517,7 @@
                     </td>
                     <td>
                         ${wo.status !== 'Completed' ? 
-                            `<button class="btn btn-success" onclick="openModal(${i})" style="font-size: 0.8rem; padding: 0.5rem;">Complete</button>` :
+                            `<button class="btn btn-success" onclick="openModal(${allWorkOrders.indexOf(wo)})" style="font-size: 0.8rem; padding: 0.5rem;">Complete</button>` :
                             wo.logbookUrl ? `<a href="${wo.logbookUrl}" target="_blank" class="btn btn-primary" style="text-decoration: none; display: inline-block; font-size: 0.8rem; padding: 0.5rem;">📄 PDF</a>` : 'Done'
                         }
                     </td>
@@ -320,7 +526,7 @@
         }
         
         function openModal(i) {
-            const wo = workOrders[i];
+            const wo = allWorkOrders[i];
             document.getElementById('completeIndex').value = i;
             
             document.getElementById('woDetails').innerHTML = `
@@ -347,7 +553,7 @@
             submitBtn.textContent = '⏳ Uploading...';
             
             const i = document.getElementById('completeIndex').value;
-            const wo = workOrders[i];
+            const wo = allWorkOrders[i];
             const name = document.getElementById('technicianName').value;
             const file = document.getElementById('logbookFile').files[0];
             const notes = document.getElementById('completionNotes').value;
@@ -420,6 +626,21 @@
                 setTimeout(() => alert.remove(), 500);
             }, 5000);
         }
+        
+        // Toggle view mode when select changes
+        document.getElementById('viewMode').addEventListener('change', function() {
+            const mode = this.value;
+            if (mode === 'completed') {
+                document.querySelector('.info-banner').innerHTML = 
+                    '<strong>Search Mode:</strong> Use filters to search completed work orders by aircraft, W/O number, or date range (max 1 month)';
+            } else if (mode === 'pending') {
+                document.querySelector('.info-banner').innerHTML = 
+                    '<strong>Pending Only:</strong> Showing all pending work orders';
+            } else {
+                document.querySelector('.info-banner').innerHTML = 
+                    '<strong>Default View:</strong> Showing all pending work orders + today\'s completed work orders';
+            }
+        });
         
         loadFromSheet();
     </script>
