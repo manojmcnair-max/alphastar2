@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aircraft Work Order System - Debug</title>
+    <title>Aircraft Work Order System</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -25,363 +25,267 @@
             padding: 1.5rem 2rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .container { max-width: 1900px; margin: 0 auto; padding: 2rem; }
+        .container { max-width: 2000px; margin: 0 auto; padding: 2rem; }
         .btn { padding: 0.6rem 1.4rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .debug-panel {
-            background: #1a1a1a;
-            color: #00ff00;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; margin-top: 1rem; }
-        th { background: var(--primary); color: white; padding: 1rem; text-align: left; font-size: 0.85rem; }
-        td { padding: 1rem; border-bottom: 1px solid #e1e8ed; font-size: 0.9rem; }
+        th { background: var(--primary); color: white; padding: 0.8rem; text-align: left; font-size: 0.85rem; }
+        td { padding: 0.8rem; border-bottom: 1px solid #e1e8ed; font-size: 0.85rem; vertical-align: top; }
         tr:hover { background: #f0f4f8; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; border-radius: 16px; padding: 2rem; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        input, select, textarea { width: 100%; padding: 0.75rem; border: 2px solid #e1e8ed; border-radius: 6px; margin-top: 0.5rem; }
+        .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        .alert-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .alert-error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .loading { text-align: center; padding: 2rem; color: #666; }
+        .status-pending { color: var(--warning); font-weight: bold; }
+        .status-completed { color: var(--success); font-weight: bold; }
         
-        .due-info {
+        .due-cell {
             font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.85rem;
+            white-space: pre-wrap;
+            line-height: 1.5;
         }
         
-        .due-type-badge {
+        .due-badge {
             display: inline-block;
             padding: 0.2rem 0.5rem;
             border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-right: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-right: 0.3rem;
             text-transform: uppercase;
         }
         
-        .badge-date {
-            background: rgba(10, 77, 140, 0.1);
-            color: var(--primary);
-            border: 1px solid var(--primary);
+        .badge-afh {
+            background: #2563eb;
+            color: white;
         }
         
-        .badge-hours {
-            background: rgba(37, 99, 235, 0.1);
-            color: #2563eb;
-            border: 1px solid #2563eb;
+        .badge-afl {
+            background: #7c3aed;
+            color: white;
         }
         
-        .badge-cycles {
-            background: rgba(124, 58, 237, 0.1);
-            color: #7c3aed;
-            border: 1px solid #7c3aed;
-        }
-        
-        .critical { color: var(--danger); font-weight: 700; }
-        .warning-level { color: var(--warning); font-weight: 600; }
-        .status-pending { color: var(--warning); font-weight: bold; }
-        .status-completed { color: var(--success); font-weight: bold; }
+        .remaining-critical { color: var(--danger); font-weight: bold; }
+        .remaining-warning { color: var(--warning); font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>✈ Aircraft Work Order System - DEBUG MODE</h1>
+        <h1>✈ Aircraft Work Order Tracking</h1>
     </div>
     <div class="container">
-        <button class="btn btn-primary" onclick="loadFromSheet()" id="refreshBtn">🔄 Refresh</button>
-        <button class="btn btn-success" onclick="toggleDebug()" id="debugBtn">🐛 Show Debug</button>
-        
-        <div id="debugPanel" class="debug-panel" style="display: none;">
-            <strong>Debug Console:</strong>
-            <div id="debugLog"></div>
-        </div>
+        <div id="alertContainer"></div>
+        <button class="btn btn-primary" onclick="loadFromSheet()" id="refreshBtn">🔄 Refresh from Sheet</button>
         
         <table id="workOrderTable">
             <thead>
                 <tr>
-                    <th>Status</th>
-                    <th>Aircraft</th>
-                    <th>W/O Number</th>
-                    <th>Description</th>
-                    <th>Due Information (Raw)</th>
-                    <th>Due Information (Parsed)</th>
-                    <th>Action Plan (Raw)</th>
-                    <th>Remaining</th>
-                    <th>Actions</th>
+                    <th style="width: 80px;">Status</th>
+                    <th style="width: 100px;">Aircraft</th>
+                    <th style="width: 140px;">W/O Number</th>
+                    <th style="width: 300px;">Description</th>
+                    <th style="width: 180px;">Due Date / AFH / AFL</th>
+                    <th style="width: 150px;">Remarks</th>
+                    <th style="width: 200px;">Action Plan</th>
+                    <th style="width: 120px;">Completed By</th>
+                    <th style="width: 100px;">Actions</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 2rem;">Loading...</td>
+                    <td colspan="9" class="loading">Loading work orders...</td>
                 </tr>
             </tbody>
         </table>
     </div>
     
+    <div id="completeModal" class="modal">
+        <div class="modal-content">
+            <h2>Complete Work Order</h2>
+            <div id="woDetails" style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;"></div>
+            <form id="completeForm" onsubmit="completeWorkOrder(event)">
+                <input type="hidden" id="completeIndex">
+                <label>Your Name *</label>
+                <input type="text" id="technicianName" required placeholder="Enter your full name">
+                <label>Logbook PDF *</label>
+                <input type="file" id="logbookFile" accept=".pdf" required>
+                <small style="color: #666; display: block; margin-top: 0.25rem;">Max file size: 50MB</small>
+                <label>Notes (Optional)</label>
+                <textarea id="completionNotes" rows="3" placeholder="Add any completion notes..."></textarea>
+                <br><br>
+                <button type="submit" class="btn btn-success" id="submitBtn">✓ Mark Complete</button>
+                <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+    
     <script>
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=1269716757&single=true&output=csv';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzD2JKdxqgMuHsu-CvuzfbKzZXe8ryJBOC_mpN9vNdwpG3M702k3_2msUo7s2VrDzcC/exec';
         
         let workOrders = [];
-        let debugLogs = [];
-        
-        function debugLog(message) {
-            console.log(message);
-            debugLogs.push(message);
-            const debugDiv = document.getElementById('debugLog');
-            if (debugDiv) {
-                debugDiv.innerHTML = debugLogs.join('<br>');
-                debugDiv.scrollTop = debugDiv.scrollHeight;
-            }
-        }
-        
-        function toggleDebug() {
-            const panel = document.getElementById('debugPanel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }
         
         async function loadFromSheet() {
-            debugLogs = [];
-            debugLog('=== LOADING DATA ===');
-            
             const refreshBtn = document.getElementById('refreshBtn');
             refreshBtn.disabled = true;
             refreshBtn.textContent = '⏳ Loading...';
             
             try {
-                debugLog('Fetching CSV from: ' + SHEET_URL);
                 const response = await fetch(SHEET_URL);
                 const csv = await response.text();
-                
-                debugLog('CSV received, length: ' + csv.length);
-                debugLog('First 200 chars: ' + csv.substring(0, 200));
-                
                 workOrders = parseCSV(csv);
-                debugLog('Parsed ' + workOrders.length + ' work orders');
-                
                 renderTable();
+                showAlert('Data loaded successfully! Found ' + workOrders.length + ' work orders.', 'success');
             } catch (error) {
-                debugLog('ERROR: ' + error.message);
                 console.error('Error loading sheet:', error);
+                showAlert('Failed to load data: ' + error.message, 'error');
             } finally {
                 refreshBtn.disabled = false;
-                refreshBtn.textContent = '🔄 Refresh';
+                refreshBtn.textContent = '🔄 Refresh from Sheet';
             }
         }
         
         function parseCSV(csv) {
+            const rows = [];
             const lines = csv.split('\n');
-            const orders = [];
+            let currentRow = [];
+            let currentField = '';
+            let insideQuotes = false;
             
-            debugLog('--- CSV PARSING ---');
-            debugLog('Total lines: ' + lines.length);
-            
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
+            // Parse CSV properly handling quoted fields with newlines
+            for (let i = 0; i < csv.length; i++) {
+                const char = csv[i];
+                const nextChar = csv[i + 1];
                 
-                debugLog(`\nLine ${i}: ${line.substring(0, 100)}...`);
-                
-                // Handle quoted fields
-                const fields = [];
-                let currentField = '';
-                let inQuotes = false;
-                
-                for (let j = 0; j < line.length; j++) {
-                    const char = line[j];
-                    
-                    if (char === '"') {
-                        inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                        fields.push(currentField.trim());
-                        currentField = '';
+                if (char === '"') {
+                    if (insideQuotes && nextChar === '"') {
+                        currentField += '"';
+                        i++; // Skip next quote
                     } else {
-                        currentField += char;
+                        insideQuotes = !insideQuotes;
                     }
+                } else if (char === ',' && !insideQuotes) {
+                    currentRow.push(currentField);
+                    currentField = '';
+                } else if (char === '\n' && !insideQuotes) {
+                    currentRow.push(currentField);
+                    if (currentRow.length > 0 && currentRow[0]) {
+                        rows.push(currentRow);
+                    }
+                    currentRow = [];
+                    currentField = '';
+                } else {
+                    currentField += char;
                 }
-                fields.push(currentField.trim());
-                
-                if (fields.length < 6) {
-                    debugLog(`  Skipped - only ${fields.length} fields`);
-                    continue;
+            }
+            
+            // Add last field and row
+            if (currentField || currentRow.length > 0) {
+                currentRow.push(currentField);
+                if (currentRow.length > 0 && currentRow[0]) {
+                    rows.push(currentRow);
                 }
-                
-                debugLog(`  Fields[0] (Aircraft): "${fields[0]}"`);
-                debugLog(`  Fields[1] (WO): "${fields[1]}"`);
-                debugLog(`  Fields[2] (Desc): "${fields[2].substring(0, 50)}..."`);
-                debugLog(`  Fields[3] (Due): "${fields[3]}"`);
-                debugLog(`  Fields[4] (Remarks): "${fields[4]}"`);
-                debugLog(`  Fields[5] (Action): "${fields[5]}"`);
-                
-                const dueInfo = parseDueDate(fields[3], fields[5]);
-                debugLog(`  Parsed Due Info:`, dueInfo);
+            }
+            
+            console.log('Parsed rows:', rows.length);
+            
+            // Convert to work orders (skip header row)
+            const orders = [];
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.length < 4) continue; // Need at least aircraft, wo, desc, due date
                 
                 orders.push({
-                    aircraft: fields[0] || '',
-                    woNumber: fields[1] || '',
-                    description: fields[2] || '',
-                    dueDateRaw: fields[3] || '',
-                    actionPlanRaw: fields[5] || '',
-                    dueInfo: dueInfo,
-                    remarks: fields[4] || '',
-                    actionPlan: fields[5] || '',
-                    status: fields[6] || 'Pending',
-                    completedBy: fields[7] || '',
-                    completedDate: fields[8] || '',
-                    logbookUrl: fields[9] || '',
-                    completionNotes: fields[10] || ''
+                    aircraft: (row[0] || '').trim(),
+                    woNumber: (row[1] || '').trim(),
+                    description: (row[2] || '').trim(),
+                    dueDate: (row[3] || '').trim(),
+                    remarks: (row[4] || '').trim(),
+                    actionPlan: (row[5] || '').trim(),
+                    status: (row[6] || 'Pending').trim(),
+                    completedBy: (row[7] || '').trim(),
+                    completedDate: (row[8] || '').trim(),
+                    logbookUrl: (row[9] || '').trim(),
+                    completionNotes: (row[10] || '').trim()
                 });
             }
             
+            console.log('Work orders:', orders);
             return orders;
         }
         
-        function parseDueDate(dueDateField, actionPlanField) {
-            debugLog(`    parseDueDate called:`);
-            debugLog(`      dueDateField: "${dueDateField}"`);
-            debugLog(`      actionPlanField: "${actionPlanField}"`);
+        function formatDueDate(dueDate, actionPlan) {
+            if (!dueDate) return '-';
             
-            // Combine both fields for parsing
-            const combinedText = dueDateField + '\n' + (actionPlanField || '');
-            debugLog(`      combinedText: "${combinedText}"`);
+            let html = '<div class="due-cell">';
             
-            const result = {
-                type: [],
-                date: null,
-                hours: null,
-                cycles: null,
-                remaining: {
-                    hours: null,
-                    cycles: null,
-                    text: ''
-                }
-            };
-            
-            // Check for date
-            const dateMatch = combinedText.match(/(\d{1,2})-([A-Za-z]{3})-(\d{2,4})/);
-            if (dateMatch) {
-                result.type.push('date');
-                result.date = dateMatch[0];
-                debugLog(`      Found DATE: ${result.date}`);
+            // Check for AFH (hours) pattern
+            const afhMatch = dueDate.match(/(\d+):(\d+)\s*(?:AFH)?/i);
+            if (afhMatch) {
+                html += `<div><span class="due-badge badge-afh">AFH</span>${afhMatch[1]}:${afhMatch[2]} hrs</div>`;
             }
             
-            // Check for hours - more flexible patterns
-            const hoursPatterns = [
-                /(\d+):(\d+)\s*(?:\(?\s*AFH\s*\)?)?/gi,
-                /(\d+)\s*hrs?\s*(?:\(?\s*AFH\s*\)?)?/gi
-            ];
-            
-            for (const pattern of hoursPatterns) {
-                const hoursMatch = combinedText.match(pattern);
-                if (hoursMatch && hoursMatch[0].includes(':')) {
-                    const match = hoursMatch[0].match(/(\d+):(\d+)/);
-                    if (match) {
-                        result.type.push('hours');
-                        result.hours = `${match[1]}:${match[2]}`;
-                        debugLog(`      Found HOURS: ${result.hours}`);
-                        break;
-                    }
-                }
+            // Check for AFL/AFC (cycles) pattern
+            const aflMatch = dueDate.match(/(\d+)\s*\(?\s*(AFL|AFC)\s*\)?/i);
+            if (aflMatch) {
+                html += `<div><span class="due-badge badge-afl">AFL</span>${aflMatch[1]} cycles</div>`;
             }
             
-            // Check for cycles - more flexible
-            const cyclesPatterns = [
-                /(\d+)\s*(?:\(?\s*AFL\s*\)?)/gi,
-                /(\d+)\s*(?:\(?\s*AFC\s*\)?)/gi,
-                /(\d+)\s*cycles?/gi
-            ];
-            
-            for (const pattern of cyclesPatterns) {
-                const cyclesMatch = combinedText.match(pattern);
-                if (cyclesMatch) {
-                    const match = cyclesMatch[0].match(/(\d+)/);
-                    if (match) {
-                        result.type.push('cycles');
-                        result.cycles = match[1];
-                        debugLog(`      Found CYCLES: ${result.cycles}`);
-                        break;
-                    }
-                }
+            // Check for regular date pattern (YYYY-MM-DD or DD-MMM-YY)
+            const dateMatch = dueDate.match(/(\d{4}-\d{2}-\d{2})|(\d{1,2}-[A-Za-z]{3}-\d{2,4})/);
+            if (dateMatch && !afhMatch && !aflMatch) {
+                html += `<div>${dateMatch[0]}</div>`;
             }
             
-            // Check for remaining hours
-            const remainingHoursMatch = combinedText.match(/(\d+)\s*AFH\s*REMAINING/i);
-            if (remainingHoursMatch) {
-                result.remaining.hours = remainingHoursMatch[1];
-                debugLog(`      Found REMAINING HOURS: ${result.remaining.hours}`);
-            }
-            
-            // Check for remaining cycles
-            const remainingCyclesMatch = combinedText.match(/(\d+)\s*AF[LC]\s*REMAINING/i);
-            if (remainingCyclesMatch) {
-                result.remaining.cycles = remainingCyclesMatch[1];
-                debugLog(`      Found REMAINING CYCLES: ${result.remaining.cycles}`);
-            }
-            
-            // Get "as of" date
-            const asOfMatch = combinedText.match(/AS OF\s+(\d+-[A-Za-z]{3}-\d{2,4})/i);
-            if (asOfMatch) {
-                result.remaining.text = `as of ${asOfMatch[1]}`;
-                debugLog(`      Found AS OF: ${result.remaining.text}`);
-            }
-            
-            debugLog(`      Final result:`, JSON.stringify(result));
-            return result;
-        }
-        
-        function formatDueInfo(dueInfo) {
-            if (!dueInfo.type || dueInfo.type.length === 0) {
-                return '<em>No parsed info</em>';
-            }
-            
-            let html = '<div class="due-info">';
-            
-            if (dueInfo.type.includes('date') && dueInfo.date) {
-                html += `<div><span class="due-type-badge badge-date">Date</span>${dueInfo.date}</div>`;
-            }
-            
-            if (dueInfo.type.includes('hours') && dueInfo.hours) {
-                html += `<div><span class="due-type-badge badge-hours">AFH</span>${dueInfo.hours} hrs</div>`;
-            }
-            
-            if (dueInfo.type.includes('cycles') && dueInfo.cycles) {
-                html += `<div><span class="due-type-badge badge-cycles">AFL</span>${dueInfo.cycles} cycles</div>`;
+            // If no patterns matched, show raw
+            if (!afhMatch && !aflMatch && !dateMatch) {
+                html += dueDate;
             }
             
             html += '</div>';
             return html;
         }
         
-        function formatRemaining(dueInfo) {
-            if (!dueInfo.remaining) return '-';
+        function formatActionPlan(actionPlan) {
+            if (!actionPlan || actionPlan === 'NIL') return '-';
             
-            let html = '<div class="due-info">';
-            let hasRemaining = false;
+            let html = '<div class="due-cell">';
             
-            if (dueInfo.remaining.hours !== null) {
-                const hours = parseInt(dueInfo.remaining.hours);
-                const className = hours <= 10 ? 'critical' : hours <= 30 ? 'warning-level' : '';
-                html += `<div class="${className}">${hours} AFH remaining</div>`;
-                hasRemaining = true;
+            // Check for remaining hours
+            const afhRemMatch = actionPlan.match(/(\d+)\s+AFH\s+REMAINING/i);
+            if (afhRemMatch) {
+                const hours = parseInt(afhRemMatch[1]);
+                const className = hours <= 10 ? 'remaining-critical' : hours <= 30 ? 'remaining-warning' : '';
+                html += `<div class="${className}">${hours} AFH rem.</div>`;
             }
             
-            if (dueInfo.remaining.cycles !== null) {
-                const cycles = parseInt(dueInfo.remaining.cycles);
-                const className = cycles <= 5 ? 'critical' : cycles <= 15 ? 'warning-level' : '';
-                html += `<div class="${className}">${cycles} AFL remaining</div>`;
-                hasRemaining = true;
+            // Check for remaining cycles
+            const aflRemMatch = actionPlan.match(/(\d+)\s+AF[CL]\s+REMAINING/i);
+            if (aflRemMatch) {
+                const cycles = parseInt(aflRemMatch[1]);
+                const className = cycles <= 5 ? 'remaining-critical' : cycles <= 15 ? 'remaining-warning' : '';
+                html += `<div class="${className}">${cycles} AFL rem.</div>`;
             }
             
-            if (dueInfo.remaining.text) {
-                html += `<div style="font-size: 0.8rem; color: #666; font-style: italic;">${dueInfo.remaining.text}</div>`;
-                hasRemaining = true;
+            // Check for "AS OF" date
+            const asOfMatch = actionPlan.match(/AS\s+OF\s+(\d{1,2}-[A-Za-z]{3}-\d{2,4})/i);
+            if (asOfMatch) {
+                html += `<div style="font-size: 0.75rem; color: #666; font-style: italic;">as of ${asOfMatch[1]}</div>`;
+            }
+            
+            // If no patterns matched, show raw
+            if (!afhRemMatch && !aflRemMatch) {
+                html += actionPlan;
             }
             
             html += '</div>';
-            return hasRemaining ? html : '-';
+            return html;
         }
         
         function renderTable() {
@@ -396,20 +300,125 @@
                 <tr>
                     <td><span class="status-${wo.status.toLowerCase()}">${wo.status}</span></td>
                     <td><strong>${wo.aircraft}</strong></td>
-                    <td>${wo.woNumber}</td>
-                    <td style="max-width: 200px; white-space: pre-wrap; font-size: 0.8rem;">${wo.description}</td>
-                    <td style="max-width: 150px; white-space: pre-wrap; font-size: 0.8rem; background: #f9f9f9;">${wo.dueDateRaw}</td>
-                    <td>${formatDueInfo(wo.dueInfo)}</td>
-                    <td style="max-width: 150px; white-space: pre-wrap; font-size: 0.8rem; background: #f9f9f9;">${wo.actionPlanRaw}</td>
-                    <td>${formatRemaining(wo.dueInfo)}</td>
+                    <td style="font-size: 0.8rem;">${wo.woNumber}</td>
+                    <td style="font-size: 0.8rem;">${wo.description}</td>
+                    <td>${formatDueDate(wo.dueDate, wo.actionPlan)}</td>
+                    <td style="font-size: 0.8rem;">${wo.remarks || '-'}</td>
+                    <td>${formatActionPlan(wo.actionPlan)}</td>
+                    <td style="font-size: 0.8rem;">
+                        ${wo.completedBy || '-'}
+                        ${wo.completedDate ? '<br><small>' + wo.completedDate + '</small>' : ''}
+                    </td>
                     <td>
                         ${wo.status !== 'Completed' ? 
-                            `<button class="btn btn-success">Complete</button>` : 
-                            'Completed'
+                            `<button class="btn btn-success" onclick="openModal(${i})" style="font-size: 0.8rem; padding: 0.5rem;">Complete</button>` :
+                            wo.logbookUrl ? `<a href="${wo.logbookUrl}" target="_blank" class="btn btn-primary" style="text-decoration: none; display: inline-block; font-size: 0.8rem; padding: 0.5rem;">📄 PDF</a>` : 'Done'
                         }
                     </td>
                 </tr>
             `).join('');
+        }
+        
+        function openModal(i) {
+            const wo = workOrders[i];
+            document.getElementById('completeIndex').value = i;
+            
+            document.getElementById('woDetails').innerHTML = `
+                <strong>Aircraft:</strong> ${wo.aircraft}<br>
+                <strong>W/O Number:</strong> ${wo.woNumber}<br>
+                <strong>Description:</strong> ${wo.description}<br>
+                <strong>Due:</strong> ${wo.dueDate}<br>
+                ${wo.actionPlan && wo.actionPlan !== 'NIL' ? '<strong>Action Plan:</strong> ' + wo.actionPlan + '<br>' : ''}
+            `;
+            
+            document.getElementById('completeModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('completeModal').classList.remove('active');
+            document.getElementById('completeForm').reset();
+        }
+        
+        async function completeWorkOrder(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Uploading...';
+            
+            const i = document.getElementById('completeIndex').value;
+            const wo = workOrders[i];
+            const name = document.getElementById('technicianName').value;
+            const file = document.getElementById('logbookFile').files[0];
+            const notes = document.getElementById('completionNotes').value;
+            
+            if (file.size > 50 * 1024 * 1024) {
+                showAlert('File too large! Maximum size is 50MB.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '✓ Mark Complete';
+                return;
+            }
+            
+            try {
+                const base64 = await fileToBase64(file);
+                
+                const data = {
+                    aircraft: wo.aircraft,
+                    woNumber: wo.woNumber,
+                    status: 'Completed',
+                    completedBy: name,
+                    completedDate: new Date().toISOString().split('T')[0],
+                    logbookBase64: base64,
+                    completionNotes: notes
+                };
+                
+                submitBtn.textContent = '⏳ Saving...';
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    closeModal();
+                    showAlert(`Work Order ${wo.woNumber} completed successfully!`, 'success');
+                    setTimeout(() => loadFromSheet(), 2000);
+                } else {
+                    throw new Error(result.error || 'Failed to complete work order');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '✓ Mark Complete';
+            }
+        }
+        
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s';
+                setTimeout(() => alert.remove(), 500);
+            }, 5000);
         }
         
         loadFromSheet();
