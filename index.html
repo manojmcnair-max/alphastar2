@@ -25,14 +25,14 @@
             padding: 1.5rem 2rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .container { max-width: 1800px; margin: 0 auto; padding: 2rem; }
+        .container { max-width: 1900px; margin: 0 auto; padding: 2rem; }
         .btn { padding: 0.6rem 1.4rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; margin-top: 1rem; }
-        th { background: var(--primary); color: white; padding: 1rem; text-align: left; }
-        td { padding: 1rem; border-bottom: 1px solid #e1e8ed; }
+        th { background: var(--primary); color: white; padding: 1rem; text-align: left; font-size: 0.85rem; }
+        td { padding: 1rem; border-bottom: 1px solid #e1e8ed; font-size: 0.9rem; }
         tr:hover { background: #f0f4f8; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; }
         .modal.active { display: flex; align-items: center; justify-content: center; }
@@ -44,6 +44,71 @@
         .loading { text-align: center; padding: 2rem; color: #666; }
         .status-pending { color: var(--warning); font-weight: bold; }
         .status-completed { color: var(--success); font-weight: bold; }
+        
+        .due-info {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .due-date {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .due-hours {
+            color: #2563eb;
+            font-weight: 600;
+        }
+        
+        .due-cycles {
+            color: #7c3aed;
+            font-weight: 600;
+        }
+        
+        .remaining-info {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+        
+        .critical {
+            color: var(--danger);
+            font-weight: 700;
+        }
+        
+        .warning-level {
+            color: var(--warning);
+            font-weight: 600;
+        }
+        
+        .due-type-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.25rem;
+            text-transform: uppercase;
+        }
+        
+        .badge-date {
+            background: rgba(10, 77, 140, 0.1);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .badge-hours {
+            background: rgba(37, 99, 235, 0.1);
+            color: #2563eb;
+            border: 1px solid #2563eb;
+        }
+        
+        .badge-cycles {
+            background: rgba(124, 58, 237, 0.1);
+            color: #7c3aed;
+            border: 1px solid #7c3aed;
+        }
     </style>
 </head>
 <body>
@@ -60,14 +125,15 @@
                     <th>Aircraft</th>
                     <th>W/O Number</th>
                     <th>Description</th>
-                    <th>Due Date</th>
+                    <th>Due Information</th>
+                    <th>Remaining</th>
                     <th>Completed By</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
                 <tr>
-                    <td colspan="7" class="loading">Loading work orders...</td>
+                    <td colspan="8" class="loading">Loading work orders...</td>
                 </tr>
             </tbody>
         </table>
@@ -99,7 +165,7 @@
         // ========================================
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=1269716757&single=true&output=csv';
         
-        // PASTE YOUR WEB APP URL HERE (from deployment step)
+        // PASTE YOUR WEB APP URL HERE
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzD2JKdxqgMuHsu-CvuzfbKzZXe8ryJBOC_mpN9vNdwpG3M702k3_2msUo7s2VrDzcC/exec';
         
         // ========================================
@@ -158,11 +224,14 @@
                 if (fields.length < 6) continue;
                 
                 // Parse the fields
+                const dueInfo = parseDueDate(fields[3]);
+                
                 orders.push({
                     aircraft: fields[0] || '',
                     woNumber: fields[1] || '',
                     description: fields[2] || '',
                     dueDate: fields[3] || '',
+                    dueInfo: dueInfo,
                     remarks: fields[4] || '',
                     actionPlan: fields[5] || '',
                     status: fields[6] || 'Pending',
@@ -176,11 +245,124 @@
             return orders;
         }
         
+        function parseDueDate(dueDateField) {
+            // Parse due date field which can contain:
+            // - Regular dates: "13-Jan-26"
+            // - Hours: "2075:30 (AFH)" or "2075:30 AFH"
+            // - Cycles: "584(AFL)" or "584 AFL"
+            // - Mixed format with newlines
+            
+            const result = {
+                type: [], // Can be 'date', 'hours', 'cycles'
+                date: null,
+                hours: null,
+                cycles: null,
+                remaining: {
+                    hours: null,
+                    cycles: null,
+                    text: ''
+                }
+            };
+            
+            // Check for date pattern (DD-MMM-YY)
+            const dateMatch = dueDateField.match(/(\d{1,2})-([A-Za-z]{3})-(\d{2,4})/);
+            if (dateMatch) {
+                result.type.push('date');
+                result.date = dateMatch[0];
+            }
+            
+            // Check for hours pattern (HH:MM or HHHH:MM)
+            const hoursMatch = dueDateField.match(/(\d+):(\d+)\s*(?:\(AFH\)|AFH)?/i);
+            if (hoursMatch) {
+                result.type.push('hours');
+                result.hours = `${hoursMatch[1]}:${hoursMatch[2]}`;
+            }
+            
+            // Check for cycles pattern
+            const cyclesMatch = dueDateField.match(/(\d+)\s*(?:\(AFL\)|AFL|AFC)/i);
+            if (cyclesMatch) {
+                result.type.push('cycles');
+                result.cycles = cyclesMatch[1];
+            }
+            
+            // Extract remaining info
+            const remainingHoursMatch = dueDateField.match(/(\d+)\s*AFH\s*REMAINING/i);
+            if (remainingHoursMatch) {
+                result.remaining.hours = remainingHoursMatch[1];
+            }
+            
+            const remainingCyclesMatch = dueDateField.match(/(\d+)\s*AF[LC]\s*REMAINING/i);
+            if (remainingCyclesMatch) {
+                result.remaining.cycles = remainingCyclesMatch[1];
+            }
+            
+            // Extract date from remaining text if present
+            const asOfMatch = dueDateField.match(/AS OF\s+(\d+-[A-Za-z]{3}-\d{2,4})/i);
+            if (asOfMatch) {
+                result.remaining.text = `as of ${asOfMatch[1]}`;
+            }
+            
+            return result;
+        }
+        
+        function formatDueInfo(dueInfo, dueDateField) {
+            if (!dueInfo.type || dueInfo.type.length === 0) {
+                return `<div class="due-info">${dueDateField}</div>`;
+            }
+            
+            let html = '<div class="due-info">';
+            
+            if (dueInfo.type.includes('date') && dueInfo.date) {
+                html += `<div><span class="due-type-badge badge-date">Date</span><span class="due-date">${dueInfo.date}</span></div>`;
+            }
+            
+            if (dueInfo.type.includes('hours') && dueInfo.hours) {
+                html += `<div><span class="due-type-badge badge-hours">AFH</span><span class="due-hours">${dueInfo.hours} hrs</span></div>`;
+            }
+            
+            if (dueInfo.type.includes('cycles') && dueInfo.cycles) {
+                html += `<div><span class="due-type-badge badge-cycles">AFL</span><span class="due-cycles">${dueInfo.cycles} cycles</span></div>`;
+            }
+            
+            html += '</div>';
+            return html;
+        }
+        
+        function formatRemaining(dueInfo) {
+            if (!dueInfo.remaining) return '-';
+            
+            let html = '<div class="due-info">';
+            let hasRemaining = false;
+            
+            if (dueInfo.remaining.hours !== null) {
+                const hours = parseInt(dueInfo.remaining.hours);
+                const className = hours <= 10 ? 'critical' : hours <= 30 ? 'warning-level' : '';
+                html += `<div class="${className}">${hours} AFH remaining</div>`;
+                hasRemaining = true;
+            }
+            
+            if (dueInfo.remaining.cycles !== null) {
+                const cycles = parseInt(dueInfo.remaining.cycles);
+                const className = cycles <= 5 ? 'critical' : cycles <= 15 ? 'warning-level' : '';
+                html += `<div class="${className}">${cycles} AFL remaining</div>`;
+                hasRemaining = true;
+            }
+            
+            if (dueInfo.remaining.text) {
+                html += `<div class="remaining-info">${dueInfo.remaining.text}</div>`;
+                hasRemaining = true;
+            }
+            
+            html += '</div>';
+            
+            return hasRemaining ? html : '-';
+        }
+        
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             
             if (workOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No work orders found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">No work orders found</td></tr>';
                 return;
             }
             
@@ -190,7 +372,8 @@
                     <td><strong>${wo.aircraft}</strong></td>
                     <td>${wo.woNumber}</td>
                     <td style="max-width: 300px; white-space: pre-wrap;">${wo.description}</td>
-                    <td>${wo.dueDate}</td>
+                    <td>${formatDueInfo(wo.dueInfo, wo.dueDate)}</td>
+                    <td>${formatRemaining(wo.dueInfo)}</td>
                     <td>${wo.completedBy || '-'}<br><small>${wo.completedDate || ''}</small></td>
                     <td>
                         ${wo.status !== 'Completed' ? 
@@ -207,11 +390,24 @@
             document.getElementById('completeIndex').value = i;
             
             // Show work order details
+            let dueInfoHtml = '';
+            if (wo.dueInfo.type.includes('date') && wo.dueInfo.date) {
+                dueInfoHtml += `<strong>Due Date:</strong> ${wo.dueInfo.date}<br>`;
+            }
+            if (wo.dueInfo.type.includes('hours') && wo.dueInfo.hours) {
+                dueInfoHtml += `<strong>Due Hours:</strong> ${wo.dueInfo.hours} AFH<br>`;
+            }
+            if (wo.dueInfo.type.includes('cycles') && wo.dueInfo.cycles) {
+                dueInfoHtml += `<strong>Due Cycles:</strong> ${wo.dueInfo.cycles} AFL<br>`;
+            }
+            
             document.getElementById('woDetails').innerHTML = `
                 <strong>Aircraft:</strong> ${wo.aircraft}<br>
                 <strong>W/O Number:</strong> ${wo.woNumber}<br>
                 <strong>Description:</strong> ${wo.description}<br>
-                <strong>Due Date:</strong> ${wo.dueDate}
+                ${dueInfoHtml}
+                ${wo.dueInfo.remaining.hours ? `<strong>Remaining Hours:</strong> ${wo.dueInfo.remaining.hours} AFH<br>` : ''}
+                ${wo.dueInfo.remaining.cycles ? `<strong>Remaining Cycles:</strong> ${wo.dueInfo.remaining.cycles} AFL<br>` : ''}
             `;
             
             document.getElementById('completeModal').classList.add('active');
@@ -263,7 +459,7 @@
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'text/plain;charset=utf-8', // Changed to text/plain to avoid CORS preflight issues common with Google Apps Script
+                        'Content-Type': 'text/plain;charset=utf-8',
                     },
                     body: JSON.stringify(data)
                 });
@@ -272,12 +468,12 @@
                 console.log('Response:', result);
 
                 if (result.success) {
-                    closeModal(); // Added semicolon
+                    closeModal();
                     showAlert(`Work Order ${wo.woNumber} completed successfully! Refreshing data...`, 'success');
-                    
-                    // Reload data after a short delay
                     setTimeout(() => loadFromSheet(), 2000);
-                } // <--- THIS WAS MISSING
+                } else {
+                    throw new Error(result.error || 'Failed to complete work order');
+                }
                 
             } catch (error) {
                 console.error('Error completing work order:', error);
