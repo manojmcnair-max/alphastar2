@@ -3,294 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fleet Command | Aircraft Status Dashboard</title>
+    <title>Fleet Command | Aircraft Status</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-            background-attachment: fixed;
-        }
+        body { font-family: 'Inter', sans-serif; }
         
-        .registration-font { font-family: 'JetBrains Mono', monospace; }
+        @keyframes blink { 
+            0%, 50%, 100% { opacity: 1; } 
+            25%, 75% { opacity: 0.5; } 
+        }
+        .blink { animation: blink 1.5s ease-in-out infinite; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .float { animation: float 4s ease-in-out infinite; }
 
-        /* Advanced Glass Effect */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 
-                        0 2px 8px rgba(0, 0, 0, 0.05),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .gradient-bg {
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
+            background-attachment: fixed;
+            color: #334155;
+        }
+
+        /* Refined Glass Effect */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
         }
 
         .glass-header {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(0,0,0,0.05);
         }
 
-        /* Premium Gradient Overlays */
-        .gradient-overlay-blue {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        }
-
-        .gradient-overlay-emerald {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-
-        .gradient-overlay-amber {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        }
-
-        .gradient-overlay-rose {
-            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
-        }
-
-        /* Animated Gradients for Stats */
-        .stat-gradient {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-gradient::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 3s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        /* Status Badges */
-        .status-badge-ready {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            color: #065f46;
-            border: 2px solid #34d399;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-        }
-
-        .status-badge-maintenance {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #92400e;
-            border: 2px solid #fbbf24;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-        }
-
-        .status-badge-grounded {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #991b1b;
-            border: 2px solid #f87171;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-            animation: pulse-glow 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse-glow {
-            0%, 100% { 
-                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-            }
-            50% { 
-                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
-            }
-        }
-
-        /* Time Alert Badges */
-        .time-critical {
-            background: linear-gradient(135deg, #fee2e2 0%, #fca5a5 100%);
-            color: #991b1b;
-            border: 2px solid #ef4444;
-            animation: pulse-border 2s ease-in-out infinite;
-        }
-
-        .time-warning {
-            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
-            color: #92400e;
-            border: 2px solid #f59e0b;
-        }
-
-        .time-ok {
-            background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%);
-            color: #065f46;
-            border: 2px solid #10b981;
-        }
-
-        @keyframes pulse-border {
-            0%, 100% { 
-                border-color: #ef4444;
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
-            }
-            50% { 
-                border-color: #dc2626;
-                box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
-            }
-        }
-
-        /* Table Row Hover */
-        .table-row {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left: 4px solid transparent;
-        }
-
-        .table-row:hover {
-            background: linear-gradient(90deg, rgba(59, 130, 246, 0.04) 0%, rgba(255, 255, 255, 0.8) 100%);
-            border-left-color: #3b82f6;
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Card Hover Effects */
         .card-hover {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         .card-hover:hover {
-            transform: translateY(-6px) scale(1.02);
-            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -5px rgba(0,0,0,0.1);
         }
 
-        /* Spinner Animation */
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .spin-animation {
-            animation: spin 1s linear infinite;
-        }
-
-        /* Pulse Animation */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .pulse-animation {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.1); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { 
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover { 
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        }
-
-        /* MEL Badge */
-        .mel-indicator {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            border: 2px solid #f87171;
-            color: #991b1b;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
-        }
-
-        /* Icon Glow Effects */
-        .icon-glow-green {
-            filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.6));
-        }
-
-        .icon-glow-amber {
-            filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
-        }
-
-        .icon-glow-red {
-            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
-        }
-
-        .icon-glow-blue {
-            filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
-        }
-
-        /* Header Pattern */
-        .header-pattern {
-            background-image: 
-                repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px),
-                repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px);
-        }
-
-        /* Fade In Animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.6s ease-out;
-        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="gradient-bg min-h-screen text-slate-800">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Aviation-themed SVG Icons
+        // --- ICONS ---
         const Icons = {
-            Plane: ({ className = "w-6 h-6" }) => (
-                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-            ),
-            CheckCircle: ({ className = "w-5 h-5" }) => (
-                <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-            ),
-            Wrench: ({ className = "w-5 h-5" }) => (
-                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            ),
-            Alert: ({ className = "w-5 h-5" }) => (
-                <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-                </svg>
-            ),
-            Clock: ({ className = "w-4 h-4" }) => (
-                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            ),
-            Sync: ({ className = "w-5 h-5" }) => (
-                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-            ),
-            Calendar: ({ className = "w-4 h-4" }) => (
-                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-            ),
-            Clipboard: ({ className = "w-4 h-4" }) => (
-                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-            ),
-            Shield: ({ className = "w-4 h-4" }) => (
-                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-            ),
+            Plane: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>,
+            Check: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>,
+            Alert: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>,
+            Clock: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+            Sync: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
+            Grid: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>,
+            List: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
         };
 
         function Dashboard() {
@@ -299,22 +92,11 @@
             const [syncing, setSyncing] = useState(false);
             const [nextSync, setNextSync] = useState(300);
             const [loading, setLoading] = useState(true);
+            const [viewMode, setViewMode] = useState('table');
             const [filterStatus, setFilterStatus] = useState('ALL');
 
-            const SHOW_HOURS_THRESHOLD = 15;
+            const SHOW_HOURS_THRESHOLD = 15; // Only show hours if <= 15
             const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=0&single=true&output=csv';
-
-            // Sample data for demo
-            const sampleData = [
-                { slNo: 1, registration: "VT-ABC", type: "Boeing 737-800", status: "SERVICEABLE", dailyInsp: "15/05/2024 08:00", weeklyInsp: "22/05/2024 12:00", mel: "", remarks: "Normal operations" },
-                { slNo: 2, registration: "VT-XYZ", type: "Airbus A320neo", status: "MRO", dailyInsp: "16/05/2024 10:30", weeklyInsp: "20/05/2024 14:00", mel: "APU Inoperative", remarks: "Scheduled C-Check" },
-                { slNo: 3, registration: "VT-DEF", type: "Boeing 737 MAX", status: "AOG", dailyInsp: "14/05/2024 06:00", weeklyInsp: "19/05/2024 09:00", mel: "Engine #2 Issue, Hydraulic System B", remarks: "Awaiting spare parts" },
-                { slNo: 4, registration: "VT-GHI", type: "Airbus A321", status: "SERVICEABLE", dailyInsp: "17/05/2024 07:30", weeklyInsp: "23/05/2024 11:00", mel: "", remarks: "" },
-                { slNo: 5, registration: "VT-JKL", type: "Boeing 787-9", status: "SERVICEABLE", dailyInsp: "16/05/2024 09:00", weeklyInsp: "21/05/2024 13:30", mel: "", remarks: "Ready for long-haul" },
-                { slNo: 6, registration: "VT-MNO", type: "Airbus A330-300", status: "MRO", dailyInsp: "13/05/2024 08:30", weeklyInsp: "18/05/2024 10:00", mel: "IFE System Degraded", remarks: "C-check underway" },
-                { slNo: 7, registration: "VT-PQR", type: "Boeing 777-300ER", status: "SERVICEABLE", dailyInsp: "16/05/2024 11:00", weeklyInsp: "22/05/2024 15:00", mel: "", remarks: "" },
-                { slNo: 8, registration: "VT-STU", type: "Airbus A350-900", status: "SERVICEABLE", dailyInsp: "17/05/2024 06:00", weeklyInsp: "23/05/2024 10:00", mel: "", remarks: "" }
-            ];
 
             async function syncFromGoogleSheet() {
                 setSyncing(true);
@@ -338,27 +120,24 @@
                             mel: cols[6] || '',
                             remarks: cols[7] || ''
                         };
-                    }).filter(item => item.registration);
-                    setAircraft(parsedData);
+                    }).filter(row => row.registration && !isNaN(row.slNo));
+
+                    if (parsedData.length > 0) {
+                        setAircraft(parsedData);
+                        setNextSync(300);
+                    }
                 } catch (error) {
-                    console.error('Sync failed:', error);
-                    setAircraft(sampleData);
+                    console.error('Sync error:', error);
+                } finally {
+                    setSyncing(false);
+                    setLoading(false);
                 }
-                setSyncing(false);
-                setNextSync(300);
             }
 
             useEffect(() => {
                 syncFromGoogleSheet();
-            }, []);
-
-            useEffect(() => {
-                const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-                return () => clearInterval(timer);
-            }, []);
-
-            useEffect(() => {
-                const countdown = setInterval(() => {
+                const timeTimer = setInterval(() => setCurrentTime(new Date()), 1000);
+                const countdownTimer = setInterval(() => {
                     setNextSync(prev => {
                         if (prev <= 1) {
                             syncFromGoogleSheet();
@@ -367,440 +146,305 @@
                         return prev - 1;
                     });
                 }, 1000);
-                return () => clearInterval(countdown);
+                return () => { clearInterval(timeTimer); clearInterval(countdownTimer); };
             }, []);
 
-            useEffect(() => {
-                if (aircraft.length > 0) setLoading(false);
-            }, [aircraft]);
-
-            const parseDateTime = (dateTimeStr) => {
-                if (!dateTimeStr || dateTimeStr.trim() === '') return null;
+            function calculateTime(dateStr) {
+                if (!dateStr || dateStr.trim() === "") return { hours: 999, overdue: false };
                 try {
-                    const [datePart, timePart] = dateTimeStr.split(' ');
-                    const [day, month, year] = datePart.split('/');
-                    const [hours, minutes] = timePart.split(':');
-                    return new Date(year, month - 1, day, hours, minutes);
+                    const parts = dateStr.split(' ');
+                    const datePart = parts[0].split('/');
+                    const timePart = parts[1].split(':');
+                    const due = new Date(Date.UTC(datePart[2], datePart[1] - 1, datePart[0], timePart[0], timePart[1]));
+                    const diffMs = due - new Date();
+                    const hours_remaining = Math.floor(diffMs / 3600000);
+                    return { hours: hours_remaining, overdue: hours_remaining < 0 };
                 } catch (e) {
-                    return null;
+                    return { hours: 999, overdue: false };
                 }
-            };
+            }
 
-            const calculateTime = (dateTimeStr) => {
-                const targetDate = parseDateTime(dateTimeStr);
-                if (!targetDate) return { hours: 999, text: 'N/A' };
-                const now = currentTime;
-                const diffMs = targetDate - now;
-                const diffHours = Math.round(diffMs / (1000 * 60 * 60));
-                if (diffHours < 0) {
-                    return { hours: Math.abs(diffHours), text: `${Math.abs(diffHours)}h overdue`, overdue: true };
+            // Refined Colors
+            function getStatusStyle(status) {
+                const s = status?.toUpperCase();
+                if (s === 'SERVICEABLE') return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', dot: 'bg-emerald-500' };
+                if (s === 'MRO') return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' };
+                if (s === 'AOG') return { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', dot: 'bg-rose-500' };
+                return { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200', dot: 'bg-slate-400' };
+            }
+
+            // Logic to determine "Ready for Dispatch"
+            function getAlertStatus(ac, isCritical) {
+                const remarksClean = ac.remarks ? ac.remarks.trim() : '';
+                const isServiceable = ac.status?.toUpperCase() === 'SERVICEABLE';
+                
+                // If it is critical (timer low), show Warning
+                if (isCritical) {
+                    return { 
+                        type: 'CRITICAL', 
+                        content: <span className="flex items-center gap-1.5 text-rose-600 font-bold animate-pulse text-base">
+                            <Icons.Alert /> COMPLETE INSP
+                        </span> 
+                    };
                 }
-                return { hours: diffHours, text: `${diffHours}h remaining` };
-            };
-
-            const getTimeBadge = (hours, overdue) => {
-                if (overdue || hours <= 3) {
-                    return (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider time-critical">
-                            <Icons.Alert className="w-3.5 h-3.5" />
-                            CRITICAL
-                        </span>
-                    );
-                } else if (hours <= 12) {
-                    return (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider time-warning">
-                            <Icons.Clock className="w-3.5 h-3.5" />
-                            WARNING
-                        </span>
-                    );
-                } else {
-                    return (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider time-ok">
-                            <Icons.CheckCircle className="w-3.5 h-3.5" />
-                            ON TRACK
-                        </span>
-                    );
+                
+                // If Serviceable, NOT critical, and NO remarks (or remarks are "Normal")
+                if (isServiceable && (!remarksClean || remarksClean.toUpperCase() === 'NORMAL')) {
+                    return { 
+                        type: 'READY', 
+                        content: <span className="flex items-center gap-1.5 text-emerald-600 font-bold tracking-wide text-base">
+                            <Icons.Check /> Ready for Dispatch
+                        </span> 
+                    };
                 }
-            };
 
-            const getStatusBadge = (status) => {
-                const statusUpper = status?.toUpperCase() || '';
-                if (statusUpper === 'SERVICEABLE') {
-                    return (
-                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-wider status-badge-ready">
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 icon-glow-green"></span>
-                            SERVICEABLE
-                        </span>
-                    );
-                } else if (statusUpper === 'MRO') {
-                    return (
-                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-wider status-badge-maintenance">
-                            <Icons.Wrench className="w-4 h-4 icon-glow-amber" />
-                            MAINTENANCE
-                        </span>
-                    );
-                } else if (statusUpper === 'AOG') {
-                    return (
-                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-wider status-badge-grounded">
-                            <Icons.Alert className="w-4 h-4 icon-glow-red pulse-animation" />
-                            GROUNDED
-                        </span>
-                    );
-                }
-                return <span className="px-4 py-2 rounded-xl text-sm font-black uppercase">{status}</span>;
-            };
-
-            const formatNextSync = (seconds) => {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                return `${mins}:${secs.toString().padStart(2, '0')}`;
-            };
-
-            const filteredAircraft = filterStatus === 'ALL' 
-                ? aircraft 
-                : aircraft.filter(ac => ac.status?.toUpperCase() === filterStatus);
-
-            const totalCount = aircraft.length;
-            const readyCount = aircraft.filter(ac => ac.status?.toUpperCase() === 'SERVICEABLE').length;
-            const maintenanceCount = aircraft.filter(ac => ac.status?.toUpperCase() === 'MRO').length;
-            const groundedCount = aircraft.filter(ac => ac.status?.toUpperCase() === 'AOG').length;
+                // Default: Show the remark or empty dash
+                return { 
+                    type: 'INFO', 
+                    content: <span className="text-slate-500 font-bold text-base">{remarksClean || '-'}</span> 
+                };
+            }
 
             if (loading) {
                 return (
                     <div className="min-h-screen flex items-center justify-center">
                         <div className="text-center">
-                            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full spin-animation mx-auto mb-4"></div>
-                            <p className="text-white text-xl font-bold">Loading Fleet Data...</p>
+                            <div className="text-white text-5xl mb-6 float opacity-80">✈️</div>
+                            <div className="text-slate-200 font-medium text-lg uppercase tracking-[0.3em]">Fleet Systems Initializing</div>
                         </div>
                     </div>
                 );
             }
 
-            return (
-                <div className="min-h-screen p-4 md:p-8 fade-in">
-                    {/* Header */}
-                    <div className="glass-card rounded-3xl mb-8 overflow-hidden">
-                        <div className="gradient-overlay-blue header-pattern p-8">
-                            <div className="flex items-center justify-between flex-wrap gap-6">
-                                <div className="flex items-center gap-5">
-                                    <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                        <Icons.Plane className="w-8 h-8 text-white icon-glow-blue" />
+            const filteredAircraft = filterStatus === 'ALL' ? aircraft : aircraft.filter(ac => ac.status?.toUpperCase() === filterStatus);
+
+            const AircraftCard = ({ ac, index }) => {
+                const dailyTime = calculateTime(ac.dailyInsp);
+                const weeklyTime = calculateTime(ac.weeklyInsp);
+                const showAlerts = ac.status?.toUpperCase() !== 'AOG' && ac.status?.toUpperCase() !== 'MRO';
+                const isCritical = showAlerts && (dailyTime.hours <= 3 || weeklyTime.hours <= 3);
+                const styles = getStatusStyle(ac.status);
+                const alertStatus = getAlertStatus(ac, isCritical);
+                
+                return (
+                    <div className="glass-effect rounded-2xl p-6 card-hover relative overflow-hidden group">
+                        {/* Status Bar Top */}
+                        <div className={`absolute top-0 left-0 w-full h-1 ${styles.dot.replace('bg-', 'bg-gradient-to-r from-white via-')}`}></div>
+
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Registration</div>
+                                <div className="text-3xl font-black text-slate-800 tracking-tight">{ac.registration}</div>
+                            </div>
+                            <div className={`px-3 py-1.5 rounded-full border ${styles.bg} ${styles.border} ${styles.text} flex items-center gap-2 shadow-sm`}>
+                                <div className={`w-2 h-2 rounded-full ${styles.dot} animate-pulse`}></div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider">{ac.status}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                            <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100/50 hover:bg-white transition-colors">
+                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">Daily Insp</div>
+                                <div className="text-sm font-mono font-semibold text-slate-700">{ac.dailyInsp || '--:--'}</div>
+                                {dailyTime.hours <= SHOW_HOURS_THRESHOLD && !dailyTime.overdue && dailyTime.hours !== 999 && (
+                                    <div className="text-[10px] font-bold text-amber-600 mt-1 flex items-center gap-1">
+                                        <Icons.Clock /> {dailyTime.hours}h left
                                     </div>
-                                    <div>
-                                        <h1 className="text-4xl md:text-5xl font-black text-white mb-1 tracking-tight">
-                                            Fleet Command Center
-                                        </h1>
-                                        <p className="text-blue-100 text-base font-medium flex items-center gap-2">
-                                            <Icons.Shield className="w-4 h-4" />
-                                            Real-time Aircraft Status Monitoring
-                                        </p>
+                                )}
+                            </div>
+                            <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100/50 hover:bg-white transition-colors">
+                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">Weekly Insp</div>
+                                <div className="text-sm font-mono font-semibold text-slate-700">{ac.weeklyInsp || '--:--'}</div>
+                                {weeklyTime.hours <= SHOW_HOURS_THRESHOLD && !weeklyTime.overdue && weeklyTime.hours !== 999 && (
+                                    <div className="text-[10px] font-bold text-amber-600 mt-1 flex items-center gap-1">
+                                        <Icons.Clock /> {weeklyTime.hours}h left
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
+                            <div>
+                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">MEL Items</div>
+                                {ac.mel && ac.mel.trim() ? (
+                                    <span className="text-rose-600 font-bold text-xs bg-rose-50 px-2 py-1 rounded border border-rose-100">{ac.mel}</span>
+                                ) : (
+                                    <span className="text-slate-400 text-xs font-medium">None</span>
+                                )}
+                            </div>
+                            <div className="text-right">
+                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">Status Check</div>
+                                <div className="text-xs">
+                                    {alertStatus.content}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen p-4 lg:p-8 font-sans flex flex-col pb-20">
+                    <div className="max-w-[1400px] mx-auto w-full flex-grow">
+                        
+                        {/* HEADER */}
+                        <div className="glass-effect rounded-3xl p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                            
+                            <div className="flex items-center gap-5 z-10">
+                                <div className="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20 float">
+                                    <Icons.Plane />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Fleet Command</h1>
+                                    <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Live Operations Dashboard
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-6 z-10">
+                                <div className="text-right hidden md:block">
+                                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">System Time (UTC)</div>
+                                    <div className="font-mono text-xl font-bold text-slate-700">
+                                        {currentTime.getUTCHours().toString().padStart(2, '0')}:
+                                        {currentTime.getUTCMinutes().toString().padStart(2, '0')}:
+                                        {currentTime.getUTCSeconds().toString().padStart(2, '0')}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="text-right">
-                                        <div className="text-white text-base font-bold mb-1 flex items-center justify-end gap-2">
-                                            <Icons.Clock className="w-5 h-5" />
-                                            {currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})}
-                                        </div>
-                                        <div className="text-blue-100 text-sm font-medium">
-                                            {currentTime.toLocaleDateString([], {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'})}
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={syncFromGoogleSheet}
-                                        disabled={syncing}
-                                        className="bg-white bg-opacity-20 backdrop-blur-sm px-6 py-3 rounded-xl text-white font-bold flex items-center gap-2 hover:bg-opacity-30 transition-all active:scale-95 border border-white border-opacity-30"
+                            </div>
+                        </div>
+
+                        {/* CONTROLS */}
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            
+                            {/* Filter Tabs */}
+                            <div className="glass-effect p-1.5 rounded-xl flex gap-1 shadow-sm overflow-x-auto max-w-full">
+                                {['ALL', 'SERVICEABLE', 'MRO', 'AOG'].map(status => (
+                                    <button 
+                                        key={status}
+                                        onClick={() => setFilterStatus(status)} 
+                                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                                            filterStatus === status 
+                                            ? 'bg-slate-800 text-white shadow-md' 
+                                            : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                                        }`}
                                     >
-                                        <Icons.Sync className={`w-5 h-5 ${syncing ? 'spin-animation' : ''}`} />
-                                        {syncing ? 'Syncing...' : 'Refresh'}
+                                        {status === 'ALL' ? 'All Fleet' : status}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* View Toggle & Sync */}
+                            <div className="flex gap-3">
+                                <div className="glass-effect p-1 rounded-lg flex">
+                                    <button onClick={() => setViewMode('table')} className={`p-2 rounded-md transition-all ${viewMode === 'table' ? 'bg-white shadow text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <Icons.List />
+                                    </button>
+                                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <Icons.Grid />
                                     </button>
                                 </div>
-                            </div>
-                            <div className="mt-4 text-blue-100 text-sm font-medium flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-blue-300 pulse-animation"></span>
-                                Next auto-refresh in: {formatNextSync(nextSync)}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Statistics Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        {/* Total Fleet */}
-                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="w-14 h-14 gradient-overlay-blue rounded-xl flex items-center justify-center">
-                                    <Icons.Plane className="w-7 h-7 text-white" />
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-5xl font-black bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                                        {totalCount}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Total Fleet</div>
-                            <div className="text-xs text-slate-400 font-semibold">Aircraft in Service</div>
-                        </div>
-
-                        {/* Serviceable */}
-                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="w-14 h-14 gradient-overlay-emerald rounded-xl flex items-center justify-center">
-                                    <Icons.CheckCircle className="w-7 h-7 text-white" />
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-5xl font-black text-emerald-600">
-                                        {readyCount}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Serviceable</div>
-                            <div className="text-xs font-bold text-emerald-600">
-                                {Math.round((readyCount/totalCount)*100)}% Operational Ready
-                            </div>
-                        </div>
-
-                        {/* Maintenance */}
-                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="w-14 h-14 gradient-overlay-amber rounded-xl flex items-center justify-center">
-                                    <Icons.Wrench className="w-7 h-7 text-white" />
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-5xl font-black text-amber-600">
-                                        {maintenanceCount}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Maintenance</div>
-                            <div className="text-xs font-bold text-amber-600">
-                                {Math.round((maintenanceCount/totalCount)*100)}% in MRO
-                            </div>
-                        </div>
-
-                        {/* Grounded */}
-                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="w-14 h-14 gradient-overlay-rose rounded-xl flex items-center justify-center">
-                                    <Icons.Alert className="w-7 h-7 text-white pulse-animation" />
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-5xl font-black text-rose-600">
-                                        {groundedCount}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Grounded</div>
-                            <div className="text-xs font-bold text-rose-600">
-                                {groundedCount > 0 ? 'Immediate Attention Required' : 'All Clear'}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Filter Buttons */}
-                    <div className="flex flex-wrap gap-3 mb-6">
-                        {[
-                            { label: 'All Aircraft', value: 'ALL', count: totalCount, icon: Icons.Plane, color: 'blue' },
-                            { label: 'Serviceable', value: 'SERVICEABLE', count: readyCount, icon: Icons.CheckCircle, color: 'emerald' },
-                            { label: 'Maintenance', value: 'MRO', count: maintenanceCount, icon: Icons.Wrench, color: 'amber' },
-                            { label: 'Grounded', value: 'AOG', count: groundedCount, icon: Icons.Alert, color: 'rose' }
-                        ].map(filter => {
-                            const Icon = filter.icon;
-                            const isActive = filterStatus === filter.value;
-                            return (
                                 <button
-                                    key={filter.value}
-                                    onClick={() => setFilterStatus(filter.value)}
-                                    className={`px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
-                                        isActive 
-                                            ? `gradient-overlay-${filter.color} text-white shadow-lg scale-105` 
-                                            : 'glass-card text-slate-600 hover:scale-105'
-                                    }`}
+                                    onClick={syncFromGoogleSheet}
+                                    disabled={syncing}
+                                    className="glass-effect px-4 py-2 rounded-lg text-xs font-bold text-slate-600 flex items-center gap-2 hover:bg-white transition-all border hover:border-blue-200 active:scale-95"
                                 >
-                                    <Icon className="w-5 h-5" />
-                                    {filter.label} ({filter.count})
+                                    <span className={syncing ? 'animate-spin' : ''}><Icons.Sync /></span>
+                                    {syncing ? 'Syncing...' : `Refresh (${Math.floor(nextSync / 60)}:${String(nextSync % 60).padStart(2, '0')})`}
                                 </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* Aircraft Table */}
-                    <div className="glass-card rounded-3xl overflow-hidden">
-                        <div className="glass-header px-8 py-6">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-                                    <Icons.Clipboard className="w-6 h-6 text-blue-600" />
-                                    Aircraft Status Details
-                                    <span className="text-base font-semibold text-slate-400">
-                                        ({filteredAircraft.length} aircraft)
-                                    </span>
-                                </h2>
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="glass-header border-b-2 border-slate-200">
-                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">#</th>
-                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
-                                            <div className="flex items-center gap-2">
-                                                <Icons.Plane className="w-4 h-4" />
-                                                Registration
-                                            </div>
-                                        </th>
-                                        <th className="px-8 py-5 text-center text-xs font-black text-slate-500 uppercase tracking-widest">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <Icons.Shield className="w-4 h-4" />
-                                                Status
-                                            </div>
-                                        </th>
-                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
-                                            <div className="flex items-center gap-2">
-                                                <Icons.Calendar className="w-4 h-4" />
-                                                Daily Check
-                                            </div>
-                                        </th>
-                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
-                                            <div className="flex items-center gap-2">
-                                                <Icons.Calendar className="w-4 h-4" />
-                                                Weekly Check
-                                            </div>
-                                        </th>
-                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
-                                            <div className="flex items-center gap-2">
-                                                <Icons.Alert className="w-4 h-4" />
-                                                MEL / Defects
-                                            </div>
-                                        </th>
-                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
-                                            <div className="flex items-center gap-2">
-                                                <Icons.Clipboard className="w-4 h-4" />
-                                                Remarks
-                                            </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredAircraft.map((ac, i) => {
-                                        const dailyTime = calculateTime(ac.dailyInsp);
-                                        const weeklyTime = calculateTime(ac.weeklyInsp);
-                                        const showDailyAlert = dailyTime.hours <= SHOW_HOURS_THRESHOLD && dailyTime.hours !== 999;
-                                        const showWeeklyAlert = weeklyTime.hours <= SHOW_HOURS_THRESHOLD && weeklyTime.hours !== 999;
+                        {/* GRID VIEW */}
+                        {viewMode === 'grid' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-[pulse-soft_0.5s_ease-out]">
+                                {filteredAircraft.map((ac, i) => (
+                                    <AircraftCard key={i} ac={ac} index={i} />
+                                ))}
+                            </div>
+                        )}
 
-                                        return (
-                                            <tr key={i} className="table-row">
-                                                <td className="px-8 py-6">
-                                                    <div className="text-lg font-black text-slate-400">{ac.slNo}</div>
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <div className="text-2xl font-black text-slate-800 registration-font tracking-tight mb-1">
-                                                        {ac.registration}
-                                                    </div>
-                                                    <div className="text-sm font-semibold text-slate-500">{ac.type}</div>
-                                                </td>
-                                                <td className="px-8 py-6 text-center">
-                                                    {getStatusBadge(ac.status)}
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <div className="text-base font-bold text-slate-700 registration-font mb-2">
-                                                        {ac.dailyInsp || '--:--'}
-                                                    </div>
-                                                    {showDailyAlert && (
-                                                        <div className="space-y-1">
-                                                            {getTimeBadge(dailyTime.hours, dailyTime.overdue)}
-                                                            <div className="text-xs font-bold text-slate-600 flex items-center gap-1">
-                                                                <Icons.Clock className="w-3 h-3" />
-                                                                {dailyTime.hours}h remaining
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <div className="text-base font-bold text-slate-700 registration-font mb-2">
-                                                        {ac.weeklyInsp || '--:--'}
-                                                    </div>
-                                                    {showWeeklyAlert && (
-                                                        <div className="space-y-1">
-                                                            {getTimeBadge(weeklyTime.hours, weeklyTime.overdue)}
-                                                            <div className="text-xs font-bold text-slate-600 flex items-center gap-1">
-                                                                <Icons.Clock className="w-3 h-3" />
-                                                                {weeklyTime.hours}h remaining
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    {ac.mel && ac.mel.trim() ? (
-                                                        <div className="space-y-2">
-                                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg mel-indicator text-xs font-black uppercase">
-                                                                <Icons.Alert className="w-3.5 h-3.5" />
-                                                                MEL ACTIVE
-                                                            </div>
-                                                            <div className="text-sm font-semibold text-slate-700 leading-relaxed">
-                                                                {ac.mel}
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="text-sm font-bold text-slate-300 italic flex items-center gap-2">
-                                                            <Icons.CheckCircle className="w-4 h-4 text-emerald-400" />
-                                                            NIL
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    {ac.remarks && ac.remarks.trim() ? (
-                                                        <div className="text-sm font-semibold text-slate-600 bg-slate-50 px-4 py-2 rounded-lg border-l-4 border-blue-500">
-                                                            {ac.remarks}
-                                                        </div>
-                                                    ) : (
-                                                        <div className="text-sm font-bold text-slate-300 italic">—</div>
-                                                    )}
-                                                </td>
+                        {/* TABLE VIEW */}
+                        {viewMode === 'table' && (
+                            <div className="glass-effect rounded-2xl shadow-sm overflow-hidden border border-white/50 animate-[pulse-soft_0.5s_ease-out]">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="glass-header text-base font-extrabold text-slate-500 uppercase tracking-wider border-b border-slate-200/60">
+                                                <th className="px-6 py-5 w-20">#</th>
+                                                <th className="px-6 py-5">Aircraft</th>
+                                                <th className="px-6 py-5 text-center">Status</th>
+                                                <th className="px-6 py-5">Daily Check</th>
+                                                <th className="px-6 py-5">Weekly Check</th>
+                                                <th className="px-6 py-5">MEL / Defects</th>
+                                                <th className="px-6 py-5">Remarks / Alerts</th>
                                             </tr>
-                                        );
-                                    })}
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 bg-white/40">
+                                            {filteredAircraft.map((ac, i) => {
+                                                const dailyTime = calculateTime(ac.dailyInsp);
+                                                const weeklyTime = calculateTime(ac.weeklyInsp);
+                                                const showAlerts = ac.status?.toUpperCase() !== 'AOG' && ac.status?.toUpperCase() !== 'MRO';
+                                                const isCritical = showAlerts && (dailyTime.hours <= 3 || weeklyTime.hours <= 3);
+                                                const styles = getStatusStyle(ac.status);
+                                                const alertStatus = getAlertStatus(ac, isCritical);
 
-                                    {filteredAircraft.length === 0 && (
-                                        <tr>
-                                            <td colSpan="7" className="px-8 py-20 text-center">
-                                                <Icons.Plane className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                                                <p className="text-2xl font-bold text-slate-400 mb-2">No Aircraft Found</p>
-                                                <p className="text-sm text-slate-400">Try selecting a different filter</p>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div className="glass-header px-8 py-4 border-t-2 border-slate-200">
-                            <div className="flex justify-between items-center text-sm">
-                                <div className="font-bold text-slate-500 flex items-center gap-2">
-                                    <Icons.Sync className="w-4 h-4" />
-                                    Auto-refresh every 5 minutes
+                                                return (
+                                                    <tr key={i} className="hover:bg-white/60 transition-colors group">
+                                                        <td className="px-6 py-4 text-base font-bold text-slate-400">{ac.slNo}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className="text-xl font-black text-slate-800 font-mono tracking-tight">{ac.registration}</span>
+                                                            <div className="text-xs text-slate-400 font-bold">{ac.type}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-black uppercase tracking-wider ${styles.bg} ${styles.text} border ${styles.border}`}>
+                                                                <span className={`w-2 h-2 rounded-full ${styles.dot}`}></span>
+                                                                {ac.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-lg font-bold text-slate-700 font-mono">{ac.dailyInsp}</div>
+                                                            {dailyTime.hours <= SHOW_HOURS_THRESHOLD && !dailyTime.overdue && dailyTime.hours !== 999 && (
+                                                                <div className="text-sm font-black text-amber-600 mt-1 flex items-center gap-1">
+                                                                    <Icons.Clock /> {dailyTime.hours}h left
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-lg font-bold text-slate-700 font-mono">{ac.weeklyInsp}</div>
+                                                            {weeklyTime.hours <= SHOW_HOURS_THRESHOLD && !weeklyTime.overdue && weeklyTime.hours !== 999 && (
+                                                                <div className="text-sm font-black text-amber-600 mt-1 flex items-center gap-1">
+                                                                    <Icons.Clock /> {weeklyTime.hours}h left
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            {ac.status === 'MRO' ? (
+                                                                <span className="text-slate-300 text-sm font-bold italic">Maintenance</span>
+                                                            ) : ac.mel && ac.mel.trim() ? (
+                                                                <span className="text-rose-600 font-bold bg-rose-50 px-3 py-1 rounded-md text-sm border border-rose-100">{ac.mel}</span>
+                                                            ) : (
+                                                                <span className="text-slate-300 font-bold text-sm">NIL</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            {alertStatus.content}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <div className="font-bold text-slate-600 flex items-center gap-2">
-                                    <Icons.Clock className="w-4 h-4" />
-                                    Last updated: {currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                <div className="px-6 py-3 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
+                                    <div className="text-xs font-bold text-slate-400">Showing {filteredAircraft.length} Aircraft</div>
                                 </div>
                             </div>
-                        </div>
+                        )}
+                        
                     </div>
-
-                    {/* Footer */}
-                    <footer className="mt-8 text-center">
-                        <div className="glass-card inline-block px-8 py-4 rounded-2xl">
-                            <p className="text-sm font-bold text-slate-600 flex items-center gap-2 justify-center mb-1">
-                                <Icons.Shield className="w-4 h-4 text-blue-600" />
-                                Fleet Command Dashboard v3.5
-                                <span className="text-slate-400">•</span>
-                                <span className="text-slate-500">Operational Use Only</span>
-                            </p>
-                            <p className="text-xs text-slate-400 font-semibold">
-                                Connected to Google Sheets • Real-time Data Sync Active
-                            </p>
-                        </div>
-                    </footer>
                 </div>
             );
         }
