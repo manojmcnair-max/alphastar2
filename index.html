@@ -3,846 +3,810 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aircraft Work Order System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>Fleet Command | Aircraft Status Dashboard</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        :root {
-            --primary: #1e40af;
-            --primary-light: #3b82f6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --border: #e5e7eb;
-            --surface: #ffffff;
-            --bg: #f9fafb;
-            --text: #111827;
-            --text-muted: #6b7280;
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            background-attachment: fixed;
         }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.5;
+        .registration-font { font-family: 'JetBrains Mono', monospace; }
+
+        /* Advanced Glass Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 
+                        0 2px 8px rgba(0, 0, 0, 0.05),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
-        
-        .header {
-            background: linear-gradient(135deg, var(--primary) 0%, #1e3a8a 100%);
-            color: white;
-            padding: 1rem 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
         }
-        
-        .header-content {
-            max-width: 1600px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+
+        /* Premium Gradient Overlays */
+        .gradient-overlay-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         }
-        
-        .header h1 {
-            font-size: 1.125rem;
-            font-weight: 600;
+
+        .gradient-overlay-emerald {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
-        
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 1.25rem;
+
+        .gradient-overlay-amber {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
-        
-        /* Compact Stats */
-        .stats {
-            display: flex;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
+
+        .gradient-overlay-rose {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
         }
-        
-        .stat {
-            flex: 1;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.75rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .stat-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.125rem;
-        }
-        
-        .stat-icon.pending { background: #fef3c7; }
-        .stat-icon.today { background: #d1fae5; }
-        .stat-icon.total { background: #dbeafe; }
-        
-        .stat-info {
-            flex: 1;
-        }
-        
-        .stat-label {
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        
-        /* Compact Filter Panel */
-        .filter-panel {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.875rem;
-            margin-bottom: 1rem;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 0.375rem;
-            margin-bottom: 0.75rem;
-            background: var(--bg);
-            padding: 0.25rem;
-            border-radius: 6px;
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 0.5rem 0.75rem;
-            border: none;
-            background: transparent;
-            border-radius: 4px;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: var(--text-muted);
-        }
-        
-        .tab.active {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .filters {
-            display: flex;
-            gap: 0.625rem;
-            flex-wrap: wrap;
-        }
-        
-        .filter {
-            flex: 1;
-            min-width: 150px;
-        }
-        
-        .filter label {
-            display: block;
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            margin-bottom: 0.25rem;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 0.8125rem;
-            font-family: 'Inter', sans-serif;
-        }
-        
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        input[type="date"] {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-        }
-        
-        .date-range {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .date-range input {
-            flex: 1;
-        }
-        
-        .date-sep {
-            color: var(--text-muted);
-            font-size: 0.875rem;
-        }
-        
-        /* Buttons */
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-light);
-        }
-        
-        .btn-success {
-            background: var(--success);
-            color: white;
-            font-size: 0.75rem;
-            padding: 0.375rem 0.75rem;
-        }
-        
-        .btn-secondary {
-            background: var(--bg);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        /* Compact Table */
-        .table-wrap {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 6px;
+
+        /* Animated Gradients for Stats */
+        .stat-gradient {
+            position: relative;
             overflow: hidden;
         }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th {
-            background: var(--bg);
-            padding: 0.625rem;
-            text-align: left;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        td {
-            padding: 0.625rem;
-            font-size: 0.8125rem;
-            border-bottom: 1px solid var(--border);
-            vertical-align: top;
-        }
-        
-        tbody tr:hover {
-            background: var(--bg);
-        }
-        
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.1875rem 0.5rem;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-        
-        .badge-pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .badge-completed {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .due-badge {
-            display: inline-flex;
-            padding: 0.125rem 0.4rem;
-            border-radius: 3px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            margin-right: 0.25rem;
-            text-transform: uppercase;
-        }
-        
-        .due-badge.afh {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
-        .due-badge.afl {
-            background: #ede9fe;
-            color: #6b21a8;
-        }
-        
-        .due-cell {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            line-height: 1.5;
-        }
-        
-        .critical { color: var(--danger); font-weight: 600; }
-        .warning { color: var(--warning); font-weight: 600; }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
+
+        .stat-gradient::before {
+            content: '';
+            position: absolute;
             top: 0;
-            left: 0;
+            left: -100%;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 3s infinite;
         }
-        
-        .modal.active { display: flex; }
-        
-        .modal-content {
-            background: var(--surface);
-            border-radius: 8px;
-            padding: 1.25rem;
-            width: 90%;
-            max-width: 550px;
-            max-height: 90vh;
-            overflow-y: auto;
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .modal-title {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-        }
-        
-        .close-btn:hover {
-            background: var(--bg);
-        }
-        
-        .wo-details {
-            background: var(--bg);
-            padding: 0.875rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-size: 0.8125rem;
-            line-height: 1.6;
-        }
-        
-        .form-group {
-            margin-bottom: 0.875rem;
-        }
-        
-        .form-group label {
-            display: block;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            margin-bottom: 0.375rem;
-        }
-        
-        textarea {
-            width: 100%;
-            padding: 0.625rem;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.8125rem;
-            resize: vertical;
-            min-height: 70px;
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 0.625rem;
-            margin-top: 1rem;
-        }
-        
-        .form-actions .btn {
-            flex: 1;
-        }
-        
-        .alert {
-            padding: 0.625rem 0.875rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-size: 0.8125rem;
-        }
-        
-        .alert-success {
-            background: #d1fae5;
+
+        /* Status Badges */
+        .status-badge-ready {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
             color: #065f46;
+            border: 2px solid #34d399;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
         }
-        
-        .alert-error {
-            background: #fee2e2;
+
+        .status-badge-maintenance {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border: 2px solid #fbbf24;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+        }
+
+        .status-badge-grounded {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             color: #991b1b;
+            border: 2px solid #f87171;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+            animation: pulse-glow 2s ease-in-out infinite;
         }
-        
-        @media (max-width: 768px) {
-            .stats { flex-direction: column; }
-            .filters { flex-direction: column; }
-            .filter { min-width: 100%; }
-            table { font-size: 0.7rem; }
-            th, td { padding: 0.5rem; }
+
+        @keyframes pulse-glow {
+            0%, 100% { 
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+            }
+            50% { 
+                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+            }
+        }
+
+        /* Time Alert Badges */
+        .time-critical {
+            background: linear-gradient(135deg, #fee2e2 0%, #fca5a5 100%);
+            color: #991b1b;
+            border: 2px solid #ef4444;
+            animation: pulse-border 2s ease-in-out infinite;
+        }
+
+        .time-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            color: #92400e;
+            border: 2px solid #f59e0b;
+        }
+
+        .time-ok {
+            background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%);
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { 
+                border-color: #ef4444;
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+            }
+            50% { 
+                border-color: #dc2626;
+                box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Table Row Hover */
+        .table-row {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid transparent;
+        }
+
+        .table-row:hover {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.04) 0%, rgba(255, 255, 255, 0.8) 100%);
+            border-left-color: #3b82f6;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Card Hover Effects */
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Spinner Animation */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .spin-animation {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Pulse Animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover { 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        /* MEL Badge */
+        .mel-indicator {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 2px solid #f87171;
+            color: #991b1b;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Icon Glow Effects */
+        .icon-glow-green {
+            filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.6));
+        }
+
+        .icon-glow-amber {
+            filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+        }
+
+        .icon-glow-red {
+            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
+        }
+
+        .icon-glow-blue {
+            filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+        }
+
+        /* Header Pattern */
+        .header-pattern {
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px),
+                repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px);
+        }
+
+        /* Fade In Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
         }
     </style>
 </head>
-<body>
-    <div class="header">
-        <div class="header-content">
-            <h1>✈ Aircraft Work Order System</h1>
-            <button class="btn btn-primary" onclick="loadFromSheet()" id="refreshBtn">🔄 Refresh</button>
-        </div>
-    </div>
-    
-    <div class="container">
-        <div id="alertContainer"></div>
-        
-        <!-- Stats -->
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-icon pending">⏳</div>
-                <div class="stat-info">
-                    <div class="stat-label">Pending</div>
-                    <div class="stat-value" id="statPending">0</div>
-                </div>
-            </div>
-            <div class="stat">
-                <div class="stat-icon today">✓</div>
-                <div class="stat-info">
-                    <div class="stat-label">Today</div>
-                    <div class="stat-value" id="statToday">0</div>
-                </div>
-            </div>
-            <div class="stat">
-                <div class="stat-icon total">📊</div>
-                <div class="stat-info">
-                    <div class="stat-label">Shown</div>
-                    <div class="stat-value" id="statTotal">0</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Filters -->
-        <div class="filter-panel">
-            <div class="tabs">
-                <button class="tab active" onclick="setMode('default')" id="tabDefault">Daily View</button>
-                <button class="tab" onclick="setMode('pending')" id="tabPending">Pending</button>
-                <button class="tab" onclick="setMode('completed')" id="tabCompleted">History</button>
-            </div>
-            
-            <div class="filters">
-                <div class="filter">
-                    <label>Aircraft</label>
-                    <select id="aircraftFilter" onchange="applyFilters()">
-                        <option value="">All</option>
-                    </select>
-                </div>
-                
-                <div class="filter">
-                    <label>W/O Number</label>
-                    <input type="text" id="woSearch" placeholder="Search..." oninput="applyFilters()">
-                </div>
-                
-                <div class="filter" id="dateFilter" style="display:none; flex: 2;">
-                    <label>Date Range</label>
-                    <div class="date-range">
-                        <input type="date" id="dateFrom" onchange="applyFilters()">
-                        <span class="date-sep">→</span>
-                        <input type="date" id="dateTo" onchange="applyFilters()">
-                    </div>
-                </div>
-                
-                <div class="filter" style="flex: 0 0 auto;">
-                    <label>&nbsp;</label>
-                    <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Table -->
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width:80px">Status</th>
-                        <th style="width:80px">Aircraft</th>
-                        <th style="width:120px">W/O Number</th>
-                        <th style="width:260px">Description</th>
-                        <th style="width:140px">Due Info</th>
-                        <th style="width:110px">Remarks</th>
-                        <th style="width:160px">Action Plan</th>
-                        <th style="width:100px">Completed</th>
-                        <th style="width:85px">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">Loading...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    
-    <!-- Modal -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Complete Work Order</h2>
-                <button class="close-btn" onclick="closeModal()">×</button>
-            </div>
-            
-            <div class="wo-details" id="woDetails"></div>
-            
-            <form onsubmit="completeWO(event)">
-                <input type="hidden" id="completeIndex">
-                
-                <div class="form-group">
-                    <label>Your Name *</label>
-                    <input type="text" id="techName" required placeholder="Full name">
-                </div>
-                
-                <div class="form-group">
-                    <label>Logbook PDF *</label>
-                    <input type="file" id="logbookFile" accept=".pdf" required>
-                    <small style="color:var(--text-muted);font-size:0.7rem;display:block;margin-top:0.25rem">Max 50MB</small>
-                </div>
-                
-                <div class="form-group">
-                    <label>Notes</label>
-                    <textarea id="notes" placeholder="Optional notes..."></textarea>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-success" id="submitBtn">✓ Complete</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <script>
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=1269716757&single=true&output=csv';
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzD2JKdxqgMuHsu-CvuzfbKzZXe8ryJBOC_mpN9vNdwpG3M702k3_2msUo7s2VrDzcC/exec';
-        
-        let allWOs = [], displayedWOs = [], mode = 'default';
-        
-        async function loadFromSheet() {
-            const btn = document.getElementById('refreshBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Loading...';
-            
-            try {
-                const res = await fetch(SHEET_URL);
-                const csv = await res.text();
-                allWOs = parseCSV(csv);
-                populateAircraft();
-                setDates();
-                applyFilters();
-                showAlert('✓ Data loaded', 'success');
-            } catch(e) {
-                showAlert('✗ Load failed', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '🔄 Refresh';
-            }
-        }
-        
-        function parseCSV(csv) {
-            const rows = [], orders = [];
-            let row = [], field = '', inQuotes = false;
-            
-            for (let i = 0; i < csv.length; i++) {
-                const c = csv[i], n = csv[i+1];
-                if (c === '"') {
-                    if (inQuotes && n === '"') { field += '"'; i++; }
-                    else inQuotes = !inQuotes;
-                } else if (c === ',' && !inQuotes) {
-                    row.push(field); field = '';
-                } else if (c === '\n' && !inQuotes) {
-                    row.push(field);
-                    if (row[0]) rows.push(row);
-                    row = []; field = '';
-                } else field += c;
-            }
-            if (field || row.length) { row.push(field); if (row[0]) rows.push(row); }
-            
-            for (let i = 1; i < rows.length; i++) {
-                const r = rows[i];
-                if (r.length < 4) continue;
-                orders.push({
-                    aircraft: (r[0]||'').trim(),
-                    woNumber: (r[1]||'').trim(),
-                    description: (r[2]||'').trim(),
-                    dueDate: (r[3]||'').trim(),
-                    remarks: (r[4]||'').trim(),
-                    actionPlan: (r[5]||'').trim(),
-                    status: (r[6]||'Pending').trim(),
-                    completedBy: (r[7]||'').trim(),
-                    completedDate: (r[8]||'').trim(),
-                    logbookUrl: (r[9]||'').trim(),
-                    completionNotes: (r[10]||'').trim()
-                });
-            }
-            return orders;
-        }
-        
-        function setMode(m) {
-            mode = m;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab'+m.charAt(0).toUpperCase()+m.slice(1)).classList.add('active');
-            document.getElementById('dateFilter').style.display = m === 'completed' ? 'block' : 'none';
-            applyFilters();
-        }
-        
-        function setDates() {
-            const today = new Date(), month = new Date(today);
-            month.setMonth(today.getMonth() - 1);
-            document.getElementById('dateFrom').value = month.toISOString().split('T')[0];
-            document.getElementById('dateTo').value = today.toISOString().split('T')[0];
-        }
-        
-        function populateAircraft() {
-            const aircraft = [...new Set(allWOs.map(w => w.aircraft).filter(a => a))].sort();
-            document.getElementById('aircraftFilter').innerHTML = '<option value="">All</option>' +
-                aircraft.map(a => `<option value="${a}">${a}</option>`).join('');
-        }
-        
-        function applyFilters() {
-            const aircraft = document.getElementById('aircraftFilter').value;
-            const search = document.getElementById('woSearch').value.toLowerCase();
-            const from = document.getElementById('dateFrom').value;
-            const to = document.getElementById('dateTo').value;
-            const today = new Date().toISOString().split('T')[0];
-            
-            displayedWOs = allWOs.filter(w => {
-                if (aircraft && w.aircraft !== aircraft) return false;
-                if (search && !w.woNumber.toLowerCase().includes(search)) return false;
-                
-                if (mode === 'default') {
-                    return w.status === 'Pending' || (w.status === 'Completed' && w.completedDate === today);
-                } else if (mode === 'pending') {
-                    return w.status === 'Pending';
-                } else {
-                    if (w.status !== 'Completed' || !w.completedDate) return false;
-                    if (from && w.completedDate < from) return false;
-                    if (to && w.completedDate > to) return false;
-                    return true;
+<body class="min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Aviation-themed SVG Icons
+        const Icons = {
+            Plane: ({ className = "w-6 h-6" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+            ),
+            CheckCircle: ({ className = "w-5 h-5" }) => (
+                <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+            ),
+            Wrench: ({ className = "w-5 h-5" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            ),
+            Alert: ({ className = "w-5 h-5" }) => (
+                <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                </svg>
+            ),
+            Clock: ({ className = "w-4 h-4" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+            Sync: ({ className = "w-5 h-5" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            ),
+            Calendar: ({ className = "w-4 h-4" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            ),
+            Clipboard: ({ className = "w-4 h-4" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+            ),
+            Shield: ({ className = "w-4 h-4" }) => (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            ),
+        };
+
+        function Dashboard() {
+            const [aircraft, setAircraft] = useState([]);
+            const [currentTime, setCurrentTime] = useState(new Date());
+            const [syncing, setSyncing] = useState(false);
+            const [nextSync, setNextSync] = useState(300);
+            const [loading, setLoading] = useState(true);
+            const [filterStatus, setFilterStatus] = useState('ALL');
+
+            const SHOW_HOURS_THRESHOLD = 15;
+            const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXiRXaJISr4tcW13tBxLXI7heUjDbCyGyyABHPZIrx-m2YqXWP0oyeTw1VL4slZ0dJrrngl3CsvO2z/pub?gid=0&single=true&output=csv';
+
+            // Sample data for demo
+            const sampleData = [
+                { slNo: 1, registration: "VT-ABC", type: "Boeing 737-800", status: "SERVICEABLE", dailyInsp: "15/05/2024 08:00", weeklyInsp: "22/05/2024 12:00", mel: "", remarks: "Normal operations" },
+                { slNo: 2, registration: "VT-XYZ", type: "Airbus A320neo", status: "MRO", dailyInsp: "16/05/2024 10:30", weeklyInsp: "20/05/2024 14:00", mel: "APU Inoperative", remarks: "Scheduled C-Check" },
+                { slNo: 3, registration: "VT-DEF", type: "Boeing 737 MAX", status: "AOG", dailyInsp: "14/05/2024 06:00", weeklyInsp: "19/05/2024 09:00", mel: "Engine #2 Issue, Hydraulic System B", remarks: "Awaiting spare parts" },
+                { slNo: 4, registration: "VT-GHI", type: "Airbus A321", status: "SERVICEABLE", dailyInsp: "17/05/2024 07:30", weeklyInsp: "23/05/2024 11:00", mel: "", remarks: "" },
+                { slNo: 5, registration: "VT-JKL", type: "Boeing 787-9", status: "SERVICEABLE", dailyInsp: "16/05/2024 09:00", weeklyInsp: "21/05/2024 13:30", mel: "", remarks: "Ready for long-haul" },
+                { slNo: 6, registration: "VT-MNO", type: "Airbus A330-300", status: "MRO", dailyInsp: "13/05/2024 08:30", weeklyInsp: "18/05/2024 10:00", mel: "IFE System Degraded", remarks: "C-check underway" },
+                { slNo: 7, registration: "VT-PQR", type: "Boeing 777-300ER", status: "SERVICEABLE", dailyInsp: "16/05/2024 11:00", weeklyInsp: "22/05/2024 15:00", mel: "", remarks: "" },
+                { slNo: 8, registration: "VT-STU", type: "Airbus A350-900", status: "SERVICEABLE", dailyInsp: "17/05/2024 06:00", weeklyInsp: "23/05/2024 10:00", mel: "", remarks: "" }
+            ];
+
+            async function syncFromGoogleSheet() {
+                setSyncing(true);
+                try {
+                    let response = await fetch(SHEET_URL);
+                    if (!response.ok) {
+                        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                        response = await fetch(proxyUrl + encodeURIComponent(SHEET_URL));
+                    }
+                    const csvText = await response.text();
+                    const lines = csvText.trim().split('\n');
+                    const parsedData = lines.slice(1).map(line => {
+                        const cols = line.split(',').map(col => col.trim().replace(/"/g, ''));
+                        return {
+                            slNo: parseInt(cols[0]),
+                            registration: cols[1],
+                            type: cols[2],
+                            status: cols[3],
+                            dailyInsp: cols[4],
+                            weeklyInsp: cols[5],
+                            mel: cols[6] || '',
+                            remarks: cols[7] || ''
+                        };
+                    }).filter(item => item.registration);
+                    setAircraft(parsedData);
+                } catch (error) {
+                    console.error('Sync failed:', error);
+                    setAircraft(sampleData);
                 }
-            });
-            
-            updateStats();
-            render();
-        }
-        
-        function resetFilters() {
-            document.getElementById('aircraftFilter').value = '';
-            document.getElementById('woSearch').value = '';
-            setDates();
-            setMode('default');
-        }
-        
-        function updateStats() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('statPending').textContent = allWOs.filter(w => w.status === 'Pending').length;
-            document.getElementById('statToday').textContent = allWOs.filter(w => w.status === 'Completed' && w.completedDate === today).length;
-            document.getElementById('statTotal').textContent = displayedWOs.length;
-        }
-        
-        function formatDue(due) {
-            if (!due) return '-';
-            let h = '<div class="due-cell">';
-            const afh = due.match(/(\d+):(\d+)/);
-            if (afh) h += `<div><span class="due-badge afh">AFH</span>${afh[0]}</div>`;
-            const afl = due.match(/(\d+)\s*\(?\s*(AFL|AFC)\s*\)?/i);
-            if (afl) h += `<div><span class="due-badge afl">AFL</span>${afl[1]}</div>`;
-            const date = due.match(/\d{4}-\d{2}-\d{2}/);
-            if (date && !afh && !afl) h += date[0];
-            if (!afh && !afl && !date) h += due;
-            return h + '</div>';
-        }
-        
-        function formatAction(action) {
-            if (!action || action === 'NIL') return '-';
-            let h = '<div class="due-cell">';
-            const ahfRem = action.match(/(\d+)\s+AFH\s+REMAINING/i);
-            if (ahfRem) {
-                const n = parseInt(ahfRem[1]);
-                h += `<div class="${n<=10?'critical':n<=30?'warning':''}">${n} AFH rem.</div>`;
+                setSyncing(false);
+                setNextSync(300);
             }
-            const aflRem = action.match(/(\d+)\s+AF[CL]\s+REMAINING/i);
-            if (aflRem) {
-                const n = parseInt(aflRem[1]);
-                h += `<div class="${n<=5?'critical':n<=15?'warning':''}">${n} AFL rem.</div>`;
+
+            useEffect(() => {
+                syncFromGoogleSheet();
+            }, []);
+
+            useEffect(() => {
+                const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+                return () => clearInterval(timer);
+            }, []);
+
+            useEffect(() => {
+                const countdown = setInterval(() => {
+                    setNextSync(prev => {
+                        if (prev <= 1) {
+                            syncFromGoogleSheet();
+                            return 300;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+                return () => clearInterval(countdown);
+            }, []);
+
+            useEffect(() => {
+                if (aircraft.length > 0) setLoading(false);
+            }, [aircraft]);
+
+            const parseDateTime = (dateTimeStr) => {
+                if (!dateTimeStr || dateTimeStr.trim() === '') return null;
+                try {
+                    const [datePart, timePart] = dateTimeStr.split(' ');
+                    const [day, month, year] = datePart.split('/');
+                    const [hours, minutes] = timePart.split(':');
+                    return new Date(year, month - 1, day, hours, minutes);
+                } catch (e) {
+                    return null;
+                }
+            };
+
+            const calculateTime = (dateTimeStr) => {
+                const targetDate = parseDateTime(dateTimeStr);
+                if (!targetDate) return { hours: 999, text: 'N/A' };
+                const now = currentTime;
+                const diffMs = targetDate - now;
+                const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+                if (diffHours < 0) {
+                    return { hours: Math.abs(diffHours), text: `${Math.abs(diffHours)}h overdue`, overdue: true };
+                }
+                return { hours: diffHours, text: `${diffHours}h remaining` };
+            };
+
+            const getTimeBadge = (hours, overdue) => {
+                if (overdue || hours <= 3) {
+                    return (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider time-critical">
+                            <Icons.Alert className="w-3.5 h-3.5" />
+                            CRITICAL
+                        </span>
+                    );
+                } else if (hours <= 12) {
+                    return (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider time-warning">
+                            <Icons.Clock className="w-3.5 h-3.5" />
+                            WARNING
+                        </span>
+                    );
+                } else {
+                    return (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider time-ok">
+                            <Icons.CheckCircle className="w-3.5 h-3.5" />
+                            ON TRACK
+                        </span>
+                    );
+                }
+            };
+
+            const getStatusBadge = (status) => {
+                const statusUpper = status?.toUpperCase() || '';
+                if (statusUpper === 'SERVICEABLE') {
+                    return (
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-wider status-badge-ready">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 icon-glow-green"></span>
+                            SERVICEABLE
+                        </span>
+                    );
+                } else if (statusUpper === 'MRO') {
+                    return (
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-wider status-badge-maintenance">
+                            <Icons.Wrench className="w-4 h-4 icon-glow-amber" />
+                            MAINTENANCE
+                        </span>
+                    );
+                } else if (statusUpper === 'AOG') {
+                    return (
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-wider status-badge-grounded">
+                            <Icons.Alert className="w-4 h-4 icon-glow-red pulse-animation" />
+                            GROUNDED
+                        </span>
+                    );
+                }
+                return <span className="px-4 py-2 rounded-xl text-sm font-black uppercase">{status}</span>;
+            };
+
+            const formatNextSync = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            const filteredAircraft = filterStatus === 'ALL' 
+                ? aircraft 
+                : aircraft.filter(ac => ac.status?.toUpperCase() === filterStatus);
+
+            const totalCount = aircraft.length;
+            const readyCount = aircraft.filter(ac => ac.status?.toUpperCase() === 'SERVICEABLE').length;
+            const maintenanceCount = aircraft.filter(ac => ac.status?.toUpperCase() === 'MRO').length;
+            const groundedCount = aircraft.filter(ac => ac.status?.toUpperCase() === 'AOG').length;
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full spin-animation mx-auto mb-4"></div>
+                            <p className="text-white text-xl font-bold">Loading Fleet Data...</p>
+                        </div>
+                    </div>
+                );
             }
-            const asOf = action.match(/AS\s+OF\s+(\d{1,2}-[A-Za-z]{3}-\d{2,4})/i);
-            if (asOf) h += `<div style="font-size:0.65rem;color:var(--text-muted);margin-top:0.25rem">${asOf[0]}</div>`;
-            if (!ahfRem && !aflRem) h += action;
-            return h + '</div>';
+
+            return (
+                <div className="min-h-screen p-4 md:p-8 fade-in">
+                    {/* Header */}
+                    <div className="glass-card rounded-3xl mb-8 overflow-hidden">
+                        <div className="gradient-overlay-blue header-pattern p-8">
+                            <div className="flex items-center justify-between flex-wrap gap-6">
+                                <div className="flex items-center gap-5">
+                                    <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                        <Icons.Plane className="w-8 h-8 text-white icon-glow-blue" />
+                                    </div>
+                                    <div>
+                                        <h1 className="text-4xl md:text-5xl font-black text-white mb-1 tracking-tight">
+                                            Fleet Command Center
+                                        </h1>
+                                        <p className="text-blue-100 text-base font-medium flex items-center gap-2">
+                                            <Icons.Shield className="w-4 h-4" />
+                                            Real-time Aircraft Status Monitoring
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="text-right">
+                                        <div className="text-white text-base font-bold mb-1 flex items-center justify-end gap-2">
+                                            <Icons.Clock className="w-5 h-5" />
+                                            {currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})}
+                                        </div>
+                                        <div className="text-blue-100 text-sm font-medium">
+                                            {currentTime.toLocaleDateString([], {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'})}
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={syncFromGoogleSheet}
+                                        disabled={syncing}
+                                        className="bg-white bg-opacity-20 backdrop-blur-sm px-6 py-3 rounded-xl text-white font-bold flex items-center gap-2 hover:bg-opacity-30 transition-all active:scale-95 border border-white border-opacity-30"
+                                    >
+                                        <Icons.Sync className={`w-5 h-5 ${syncing ? 'spin-animation' : ''}`} />
+                                        {syncing ? 'Syncing...' : 'Refresh'}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="mt-4 text-blue-100 text-sm font-medium flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-300 pulse-animation"></span>
+                                Next auto-refresh in: {formatNextSync(nextSync)}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Statistics Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        {/* Total Fleet */}
+                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-14 h-14 gradient-overlay-blue rounded-xl flex items-center justify-center">
+                                    <Icons.Plane className="w-7 h-7 text-white" />
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-5xl font-black bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                                        {totalCount}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Total Fleet</div>
+                            <div className="text-xs text-slate-400 font-semibold">Aircraft in Service</div>
+                        </div>
+
+                        {/* Serviceable */}
+                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-14 h-14 gradient-overlay-emerald rounded-xl flex items-center justify-center">
+                                    <Icons.CheckCircle className="w-7 h-7 text-white" />
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-5xl font-black text-emerald-600">
+                                        {readyCount}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Serviceable</div>
+                            <div className="text-xs font-bold text-emerald-600">
+                                {Math.round((readyCount/totalCount)*100)}% Operational Ready
+                            </div>
+                        </div>
+
+                        {/* Maintenance */}
+                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-14 h-14 gradient-overlay-amber rounded-xl flex items-center justify-center">
+                                    <Icons.Wrench className="w-7 h-7 text-white" />
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-5xl font-black text-amber-600">
+                                        {maintenanceCount}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Maintenance</div>
+                            <div className="text-xs font-bold text-amber-600">
+                                {Math.round((maintenanceCount/totalCount)*100)}% in MRO
+                            </div>
+                        </div>
+
+                        {/* Grounded */}
+                        <div className="glass-card rounded-2xl p-6 card-hover stat-gradient">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-14 h-14 gradient-overlay-rose rounded-xl flex items-center justify-center">
+                                    <Icons.Alert className="w-7 h-7 text-white pulse-animation" />
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-5xl font-black text-rose-600">
+                                        {groundedCount}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Grounded</div>
+                            <div className="text-xs font-bold text-rose-600">
+                                {groundedCount > 0 ? 'Immediate Attention Required' : 'All Clear'}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Filter Buttons */}
+                    <div className="flex flex-wrap gap-3 mb-6">
+                        {[
+                            { label: 'All Aircraft', value: 'ALL', count: totalCount, icon: Icons.Plane, color: 'blue' },
+                            { label: 'Serviceable', value: 'SERVICEABLE', count: readyCount, icon: Icons.CheckCircle, color: 'emerald' },
+                            { label: 'Maintenance', value: 'MRO', count: maintenanceCount, icon: Icons.Wrench, color: 'amber' },
+                            { label: 'Grounded', value: 'AOG', count: groundedCount, icon: Icons.Alert, color: 'rose' }
+                        ].map(filter => {
+                            const Icon = filter.icon;
+                            const isActive = filterStatus === filter.value;
+                            return (
+                                <button
+                                    key={filter.value}
+                                    onClick={() => setFilterStatus(filter.value)}
+                                    className={`px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
+                                        isActive 
+                                            ? `gradient-overlay-${filter.color} text-white shadow-lg scale-105` 
+                                            : 'glass-card text-slate-600 hover:scale-105'
+                                    }`}
+                                >
+                                    <Icon className="w-5 h-5" />
+                                    {filter.label} ({filter.count})
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Aircraft Table */}
+                    <div className="glass-card rounded-3xl overflow-hidden">
+                        <div className="glass-header px-8 py-6">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                                    <Icons.Clipboard className="w-6 h-6 text-blue-600" />
+                                    Aircraft Status Details
+                                    <span className="text-base font-semibold text-slate-400">
+                                        ({filteredAircraft.length} aircraft)
+                                    </span>
+                                </h2>
+                            </div>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="glass-header border-b-2 border-slate-200">
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">#</th>
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2">
+                                                <Icons.Plane className="w-4 h-4" />
+                                                Registration
+                                            </div>
+                                        </th>
+                                        <th className="px-8 py-5 text-center text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Icons.Shield className="w-4 h-4" />
+                                                Status
+                                            </div>
+                                        </th>
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2">
+                                                <Icons.Calendar className="w-4 h-4" />
+                                                Daily Check
+                                            </div>
+                                        </th>
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2">
+                                                <Icons.Calendar className="w-4 h-4" />
+                                                Weekly Check
+                                            </div>
+                                        </th>
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2">
+                                                <Icons.Alert className="w-4 h-4" />
+                                                MEL / Defects
+                                            </div>
+                                        </th>
+                                        <th className="px-8 py-5 text-left text-xs font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2">
+                                                <Icons.Clipboard className="w-4 h-4" />
+                                                Remarks
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredAircraft.map((ac, i) => {
+                                        const dailyTime = calculateTime(ac.dailyInsp);
+                                        const weeklyTime = calculateTime(ac.weeklyInsp);
+                                        const showDailyAlert = dailyTime.hours <= SHOW_HOURS_THRESHOLD && dailyTime.hours !== 999;
+                                        const showWeeklyAlert = weeklyTime.hours <= SHOW_HOURS_THRESHOLD && weeklyTime.hours !== 999;
+
+                                        return (
+                                            <tr key={i} className="table-row">
+                                                <td className="px-8 py-6">
+                                                    <div className="text-lg font-black text-slate-400">{ac.slNo}</div>
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    <div className="text-2xl font-black text-slate-800 registration-font tracking-tight mb-1">
+                                                        {ac.registration}
+                                                    </div>
+                                                    <div className="text-sm font-semibold text-slate-500">{ac.type}</div>
+                                                </td>
+                                                <td className="px-8 py-6 text-center">
+                                                    {getStatusBadge(ac.status)}
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    <div className="text-base font-bold text-slate-700 registration-font mb-2">
+                                                        {ac.dailyInsp || '--:--'}
+                                                    </div>
+                                                    {showDailyAlert && (
+                                                        <div className="space-y-1">
+                                                            {getTimeBadge(dailyTime.hours, dailyTime.overdue)}
+                                                            <div className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                                                                <Icons.Clock className="w-3 h-3" />
+                                                                {dailyTime.hours}h remaining
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    <div className="text-base font-bold text-slate-700 registration-font mb-2">
+                                                        {ac.weeklyInsp || '--:--'}
+                                                    </div>
+                                                    {showWeeklyAlert && (
+                                                        <div className="space-y-1">
+                                                            {getTimeBadge(weeklyTime.hours, weeklyTime.overdue)}
+                                                            <div className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                                                                <Icons.Clock className="w-3 h-3" />
+                                                                {weeklyTime.hours}h remaining
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    {ac.mel && ac.mel.trim() ? (
+                                                        <div className="space-y-2">
+                                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg mel-indicator text-xs font-black uppercase">
+                                                                <Icons.Alert className="w-3.5 h-3.5" />
+                                                                MEL ACTIVE
+                                                            </div>
+                                                            <div className="text-sm font-semibold text-slate-700 leading-relaxed">
+                                                                {ac.mel}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-sm font-bold text-slate-300 italic flex items-center gap-2">
+                                                            <Icons.CheckCircle className="w-4 h-4 text-emerald-400" />
+                                                            NIL
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    {ac.remarks && ac.remarks.trim() ? (
+                                                        <div className="text-sm font-semibold text-slate-600 bg-slate-50 px-4 py-2 rounded-lg border-l-4 border-blue-500">
+                                                            {ac.remarks}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-sm font-bold text-slate-300 italic">—</div>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+
+                                    {filteredAircraft.length === 0 && (
+                                        <tr>
+                                            <td colSpan="7" className="px-8 py-20 text-center">
+                                                <Icons.Plane className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                                                <p className="text-2xl font-bold text-slate-400 mb-2">No Aircraft Found</p>
+                                                <p className="text-sm text-slate-400">Try selecting a different filter</p>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="glass-header px-8 py-4 border-t-2 border-slate-200">
+                            <div className="flex justify-between items-center text-sm">
+                                <div className="font-bold text-slate-500 flex items-center gap-2">
+                                    <Icons.Sync className="w-4 h-4" />
+                                    Auto-refresh every 5 minutes
+                                </div>
+                                <div className="font-bold text-slate-600 flex items-center gap-2">
+                                    <Icons.Clock className="w-4 h-4" />
+                                    Last updated: {currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <footer className="mt-8 text-center">
+                        <div className="glass-card inline-block px-8 py-4 rounded-2xl">
+                            <p className="text-sm font-bold text-slate-600 flex items-center gap-2 justify-center mb-1">
+                                <Icons.Shield className="w-4 h-4 text-blue-600" />
+                                Fleet Command Dashboard v3.5
+                                <span className="text-slate-400">•</span>
+                                <span className="text-slate-500">Operational Use Only</span>
+                            </p>
+                            <p className="text-xs text-slate-400 font-semibold">
+                                Connected to Google Sheets • Real-time Data Sync Active
+                            </p>
+                        </div>
+                    </footer>
+                </div>
+            );
         }
-        
-        function render() {
-            const tbody = document.getElementById('tableBody');
-            if (!displayedWOs.length) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">No work orders match filters</td></tr>';
-                return;
-            }
-            tbody.innerHTML = displayedWOs.map(w => `
-                <tr>
-                    <td><span class="badge badge-${w.status.toLowerCase()}">${w.status==='Completed'?'✓':'○'} ${w.status}</span></td>
-                    <td><strong>${w.aircraft}</strong></td>
-                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.7rem">${w.woNumber}</td>
-                    <td>${w.description}</td>
-                    <td>${formatDue(w.dueDate)}</td>
-                    <td style="font-size:0.7rem">${w.remarks||'-'}</td>
-                    <td>${formatAction(w.actionPlan)}</td>
-                    <td style="font-size:0.7rem">${w.completedBy||'-'}${w.completedDate?'<br><span style="color:var(--text-muted)">'+w.completedDate+'</span>':''}</td>
-                    <td>${w.status!=='Completed'?`<button class="btn btn-success" onclick="openModal(${allWOs.indexOf(w)})">Complete</button>`:w.logbookUrl?`<a href="${w.logbookUrl}" target="_blank" class="btn btn-primary" style="text-decoration:none;font-size:0.7rem;padding:0.3rem 0.6rem">📄 PDF</a>`:'Done'}</td>
-                </tr>
-            `).join('');
-        }
-        
-        function openModal(i) {
-            const w = allWOs[i];
-            document.getElementById('completeIndex').value = i;
-            document.getElementById('woDetails').innerHTML = `<strong>Aircraft:</strong> ${w.aircraft}<br><strong>W/O:</strong> ${w.woNumber}<br><strong>Description:</strong> ${w.description}<br><strong>Due:</strong> ${w.dueDate}`;
-            document.getElementById('modal').classList.add('active');
-        }
-        
-        function closeModal() {
-            document.getElementById('modal').classList.remove('active');
-            document.getElementById('techName').value = '';
-            document.getElementById('logbookFile').value = '';
-            document.getElementById('notes').value = '';
-        }
-        
-        async function completeWO(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Saving...';
-            
-            const i = document.getElementById('completeIndex').value;
-            const w = allWOs[i];
-            const name = document.getElementById('techName').value;
-            const file = document.getElementById('logbookFile').files[0];
-            const notes = document.getElementById('notes').value;
-            
-            if (file.size > 50*1024*1024) {
-                showAlert('File too large', 'error');
-                btn.disabled = false;
-                btn.textContent = '✓ Complete';
-                return;
-            }
-            
-            try {
-                const base64 = await new Promise((res, rej) => {
-                    const r = new FileReader();
-                    r.onload = () => res(r.result);
-                    r.onerror = rej;
-                    r.readAsDataURL(file);
-                });
-                
-                const resp = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'text/plain;charset=utf-8'},
-                    body: JSON.stringify({
-                        aircraft: w.aircraft,
-                        woNumber: w.woNumber,
-                        status: 'Completed',
-                        completedBy: name,
-                        completedDate: new Date().toISOString().split('T')[0],
-                        logbookBase64: base64,
-                        completionNotes: notes
-                    })
-                });
-                
-                const result = await resp.json();
-                if (result.success) {
-                    closeModal();
-                    showAlert(`✓ ${w.woNumber} completed`, 'success');
-                    setTimeout(loadFromSheet, 2000);
-                } else throw new Error(result.error||'Failed');
-            } catch(err) {
-                showAlert('✗ '+err.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '✓ Complete';
-            }
-        }
-        
-        function showAlert(msg, type) {
-            const div = document.createElement('div');
-            div.className = `alert alert-${type}`;
-            div.textContent = msg;
-            document.getElementById('alertContainer').appendChild(div);
-            setTimeout(() => {
-                div.style.opacity = '0';
-                div.style.transition = 'opacity 0.3s';
-                setTimeout(() => div.remove(), 300);
-            }, 3500);
-        }
-        
-        loadFromSheet();
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
     </script>
 </body>
 </html>
